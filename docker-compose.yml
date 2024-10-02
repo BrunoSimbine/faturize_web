@@ -9,6 +9,6 @@ services:
       - faturize_web_network
 
 networks:
-  faturize_api_network:
+  faturize_web_network:
     driver: bridge
       
