@@ -18,7 +18,7 @@ const navLinks = [
     {name: "Home", href: "/home"},
     {name: "Orders", href: "/orders"},
     {name: "Dashboard", href: "/dashboard"},
-    {name: "Settings", href: "/settings"},
+    {name: "Settings", href: "/general"},
   ]
 
 export function Navbar() {
