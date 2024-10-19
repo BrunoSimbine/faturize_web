@@ -33,13 +33,10 @@ export default async function TaskPage() {
       <div className="h-full flex-1 flex-col space-y-2 flex">
         <div className="flex items-center justify-between space-y-2">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">Bem Vindo!</h2>
+            <h2 className="text-2xl font-bold tracking-tight">Minhas Faturas</h2>
             <p className="text-muted-foreground">
               Aqui esta a lista das ultimas faturas geradas!
             </p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <UserNav />
           </div>
         </div>
         <DataTable data={tasks} columns={columns} />

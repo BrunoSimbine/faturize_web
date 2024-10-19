@@ -60,40 +60,40 @@ import {
 
 
 const chartData = [
-  { date: "2024-04-01", desktop: 222, mobile: 150 },
-  { date: "2024-04-02", desktop: 97, mobile: 180 },
-  { date: "2024-04-03", desktop: 167, mobile: 120 },
-  { date: "2024-04-04", desktop: 242, mobile: 260 },
-  { date: "2024-04-05", desktop: 373, mobile: 290 },
-  { date: "2024-04-06", desktop: 301, mobile: 340 },
-  { date: "2024-04-07", desktop: 245, mobile: 180 },
-  { date: "2024-04-08", desktop: 409, mobile: 320 },
-  { date: "2024-04-09", desktop: 59, mobile: 110 },
-  { date: "2024-04-10", desktop: 261, mobile: 190 },
-  { date: "2024-04-11", desktop: 327, mobile: 350 },
-  { date: "2024-04-12", desktop: 292, mobile: 210 },
-  { date: "2024-04-13", desktop: 342, mobile: 380 },
-  { date: "2024-04-14", desktop: 137, mobile: 220 },
-  { date: "2024-04-15", desktop: 120, mobile: 170 },
-  { date: "2024-04-16", desktop: 138, mobile: 190 },
-  { date: "2024-04-17", desktop: 446, mobile: 360 },
-  { date: "2024-04-18", desktop: 364, mobile: 410 },
-  { date: "2024-04-19", desktop: 243, mobile: 180 },
-  { date: "2024-04-20", desktop: 89, mobile: 150 },
-  { date: "2024-04-21", desktop: 137, mobile: 200 },
-  { date: "2024-04-22", desktop: 224, mobile: 170 },
+  { date: "2024-04-01", numerario: 222, online: 150 },
+  { date: "2024-04-02", numerario: 97, online: 180 },
+  { date: "2024-04-03", numerario: 167, online: 120 },
+  { date: "2024-04-04", numerario: 242, online: 260 },
+  { date: "2024-04-05", numerario: 373, online: 290 },
+  { date: "2024-04-06", numerario: 301, online: 340 },
+  { date: "2024-04-07", numerario: 245, online: 180 },
+  { date: "2024-04-08", numerario: 409, online: 320 },
+  { date: "2024-04-09", numerario: 59, online: 110 },
+  { date: "2024-04-10", numerario: 261, online: 190 },
+  { date: "2024-04-11", numerario: 327, online: 350 },
+  { date: "2024-04-12", numerario: 292, online: 210 },
+  { date: "2024-04-13", numerario: 342, online: 380 },
+  { date: "2024-04-14", numerario: 137, online: 220 },
+  { date: "2024-04-15", numerario: 120, online: 170 },
+  { date: "2024-04-16", numerario: 138, online: 190 },
+  { date: "2024-04-17", numerario: 446, online: 360 },
+  { date: "2024-04-18", numerario: 364, online: 410 },
+  { date: "2024-04-19", numerario: 243, online: 180 },
+  { date: "2024-04-20", numerario: 89, online: 150 },
+  { date: "2024-04-21", numerario: 137, online: 200 },
+  { date: "2024-04-22", numerario: 224, online: 170 },
 ]
 
 const chartConfig = {
   views: {
-    label: "Page Views",
+    label: "Faturas Pagas",
   },
-  desktop: {
-    label: "Desktop",
+  numerario: {
+    label: "Numerario",
     color: "hsl(var(--chart-1))",
   },
-  mobile: {
-    label: "Mobile",
+  online: {
+    label: "Online",
     color: "hsl(var(--chart-2))",
   },
 } satisfies ChartConfig
@@ -101,12 +101,12 @@ const chartConfig = {
 export default function Dashboard() {
 
     const [activeChart, setActiveChart] =
-    React.useState<keyof typeof chartConfig>("desktop")
+    React.useState<keyof typeof chartConfig>("numerario")
 
   const total = React.useMemo(
     () => ({
-      desktop: chartData.reduce((acc, curr) => acc + curr.desktop, 0),
-      mobile: chartData.reduce((acc, curr) => acc + curr.mobile, 0),
+      numerario: chartData.reduce((acc, curr) => acc + curr.numerario, 0),
+      online: chartData.reduce((acc, curr) => acc + curr.online, 0),
     }),
     []
   )
@@ -119,52 +119,52 @@ export default function Dashboard() {
           <Card x-chunk="dashboard-01-chunk-0">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Total Revenue
+                Saldo Disponivel
               </CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">$45,231.89</div>
+              <div className="text-2xl font-bold">MZN 45,231.89</div>
               <p className="text-xs text-muted-foreground">
-                +20.1% from last month
+                +20.1% relacao a mes passado.
               </p>
             </CardContent>
           </Card>
           <Card x-chunk="dashboard-01-chunk-1">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Subscriptions
+                Receita Total
               </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">+2350</div>
+              <div className="text-2xl font-bold">MZN 55,873.36</div>
               <p className="text-xs text-muted-foreground">
-                +180.1% from last month
+                +18.1% relacao a mes passado.
               </p>
             </CardContent>
           </Card>
           <Card x-chunk="dashboard-01-chunk-2">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Sales</CardTitle>
+              <CardTitle className="text-sm font-medium">Faturas Geradas</CardTitle>
               <CreditCard className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">+12,234</div>
               <p className="text-xs text-muted-foreground">
-                +19% from last month
+                +19 relacao a mes passado.
               </p>
             </CardContent>
           </Card>
           <Card x-chunk="dashboard-01-chunk-3">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Now</CardTitle>
+              <CardTitle className="text-sm font-medium">Faturas Pagas</CardTitle>
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">+573</div>
               <p className="text-xs text-muted-foreground">
-                +201 since last hour
+                +2 relacao a mes passado.
               </p>
             </CardContent>
           </Card>
@@ -175,13 +175,13 @@ export default function Dashboard() {
             className="xl:col-span-2">
             <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
               <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
-                <CardTitle>Bar Chart - Interactive</CardTitle>
+                <CardTitle>Frequencia de pagamentos</CardTitle>
                 <CardDescription>
-                  Showing total visitors for the last 3 months
+                  Total dos pagamentos no ultimo mes
                 </CardDescription>
               </div>
               <div className="flex">
-                {["desktop", "mobile"].map((key) => {
+                {["numerario", "online"].map((key) => {
                   const chart = key as keyof typeof chartConfig
                   return (
                     <button
@@ -253,14 +253,14 @@ export default function Dashboard() {
           <Card x-chunk="dashboard-01-chunk-5">
             <CardHeader className="flex flex-row items-center">
               <div className="grid gap-2">
-                <CardTitle>Transactions</CardTitle>
+                <CardTitle>Pagamentos</CardTitle>
                 <CardDescription>
-                  Recent transactions.
+                  Pagamentos Recentes.
                 </CardDescription>
               </div>
               <Button asChild size="sm" className="ml-auto gap-1">
                 <Link href="#">
-                  View All
+                  Ver Tudo
                   <ArrowUpRight className="h-4 w-4" />
                 </Link>
               </Button>
@@ -275,7 +275,7 @@ export default function Dashboard() {
                     olivia.martin@email.com
                   </p>
                 </div>
-                <div className="ml-auto font-medium">+$1,999.00</div>
+                <div className="ml-auto font-medium">+1,999.00 MT</div>
               </div>
               <div className="flex items-center gap-4">
                 <div className="grid gap-1">
@@ -286,7 +286,7 @@ export default function Dashboard() {
                     jackson.lee@email.com
                   </p>
                 </div>
-                <div className="ml-auto font-medium">+$39.00</div>
+                <div className="ml-auto font-medium">+39.00 MT</div>
               </div>
               <div className="flex items-center gap-4">
                 <div className="grid gap-1">
@@ -297,7 +297,7 @@ export default function Dashboard() {
                     isabella.nguyen@email.com
                   </p>
                 </div>
-                <div className="ml-auto font-medium">+$299.00</div>
+                <div className="ml-auto font-medium">+299.00 MT</div>
               </div>
               <div className="flex items-center gap-4">
                 <div className="grid gap-1">
@@ -308,7 +308,7 @@ export default function Dashboard() {
                     will@email.com
                   </p>
                 </div>
-                <div className="ml-auto font-medium">+$99.00</div>
+                <div className="ml-auto font-medium">+99.00 MT</div>
               </div>
               <div className="flex items-center gap-4">
                 <div className="grid gap-1">
@@ -319,7 +319,7 @@ export default function Dashboard() {
                     sofia.davis@email.com
                   </p>
                 </div>
-                <div className="ml-auto font-medium">+$39.00</div>
+                <div className="ml-auto font-medium">+39.00 MT</div>
               </div>
             </CardContent>
           </Card>

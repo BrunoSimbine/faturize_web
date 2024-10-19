@@ -28,8 +28,11 @@ export function DataTableColumnHeader<TData, TValue>({
   className,
 }: DataTableColumnHeaderProps<TData, TValue>) {
   if (!column.getCanSort()) {
+    if (title == "ID" || title == "Date") {
+      return <div className={cn("hidden md:flex", className)}>{title}</div>
+    }
     return <div className={cn(className)}>{title}</div>
-  } else if ( title == "Title") {
+  } else if ( title == "Client ID") {
     return (
           <div className={cn("hidden md:flex items-center space-x-2 ", className)}>
             <DropdownMenu>

@@ -53,16 +53,16 @@ export default function Apps() {
       <Layout.Body className='flex flex-col'>
         <div>
           <h1 className='text-2xl font-bold tracking-tight'>
-            App Integrations
+            Extencoes do Sistema
           </h1>
           <p className='text-muted-foreground'>
-            Here&apos;s a list of your apps for the integration!
+            Active algumas extencoes para desbloquear mais funcionalidades!
           </p>
         </div>
         <div className='my-4 flex items-end justify-between sm:my-0 sm:items-center'>
           <div className='flex flex-col gap-4 sm:my-4 sm:flex-row'>
             <Input
-              placeholder='Filter apps...'
+              placeholder='Filtrar Extencoes...'
               className='h-9 w-40 lg:w-[250px]'
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -72,9 +72,9 @@ export default function Apps() {
                 <SelectValue>{appText.get(appType)}</SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value='all'>All Apps</SelectItem>
-                <SelectItem value='connected'>Connected</SelectItem>
-                <SelectItem value='notConnected'>Not Connected</SelectItem>
+                <SelectItem value='all'>Todas</SelectItem>
+                <SelectItem value='connected'>Activadas</SelectItem>
+                <SelectItem value='notConnected'>Desactivadas</SelectItem>
               </SelectContent>
             </Select>
           </div>
