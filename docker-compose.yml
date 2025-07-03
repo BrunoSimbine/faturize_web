@@ -1,0 +1,14 @@
+services:
+  faturize_web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    networks:
+      - faturize_web_network
+
+networks:
+  faturize_web_network:
+    driver: bridge
+      
