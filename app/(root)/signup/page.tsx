@@ -12,7 +12,7 @@ export default function SignupPage() {
       </div>
       <div className="relative hidden bg-muted lg:block">
         <img
-          src="http://173.249.17.22:9000/faturize/foto.jpg"
+          src="https://minio.privaxnet.com/faturize/foto.jpg"
           alt="Image"
           className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
         />

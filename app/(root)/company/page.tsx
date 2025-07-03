@@ -153,7 +153,7 @@ export default function Company() {
       {/* Imagem com botões sobrepostos */}
       <div className="relative w-full h-48 rounded-lg overflow-hidden mb-3">
         <img
-          src="http://173.249.17.22:9000/faturize/foto.jpg"
+          src="https://minio.privaxnet.com/faturize/foto.jpg"
           alt="Image"
           className="w-full h-full object-cover"
         />
