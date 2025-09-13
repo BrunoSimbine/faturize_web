@@ -7,6 +7,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { LogoImage } from "@/components/logo-image";
 
@@ -17,6 +18,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { logout } from '@/services/api';
 
 interface MenuItem {
   title: string;
@@ -65,6 +67,19 @@ const Navbar = ({
     signup: { title: "Logout", url: "#" },
   },
 }: Navbar1Props) => {
+
+  const router = useRouter();
+
+  const handleLogout = async () => {
+
+    try {
+      await logout();
+      router.replace('/');
+    } catch (error) {
+      console.log(error)
+    }
+  };
+
   return (
     <section className="border-b">
       <div className="container mx-auto">
@@ -79,7 +94,7 @@ const Navbar = ({
             </a>
           </div>
           <div className="flex gap-2">
-            <Button asChild size="sm"  variant="destructive">
+            <Button onClick={handleLogout} asChild size="sm"  variant="destructive">
               <a href={auth.signup.url}>{auth.signup.title}</a>
             </Button>
           </div>

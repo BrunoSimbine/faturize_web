@@ -9,9 +9,8 @@ import {
   IconReport,
   IconSettings,
   IconCreditCard,
-  IconUserCode,
   IconBusinessplan,
-  IconReceiptDollar,
+  IconPackages,
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -41,11 +40,13 @@ const data = {
       url: "/dashboard",
       icon: IconDashboard,
     },
+    /*
     {
       title: "Faturas",
       url: "/orders",
       icon: IconReceiptDollar,
     },
+    */
     {
       title: "Carteiras",
       url: "/wallets",
@@ -56,6 +57,11 @@ const data = {
       url: "/transactions",
       icon: IconListDetails,
     },
+    {
+      title: "Precos",
+      url: "/pricing",
+      icon: IconPackages,
+    },
     /*
     {
       title: "Colaboradores",
@@ -63,13 +69,13 @@ const data = {
       
       icon: IconUsers,
     },
-    */
+    
     {
       title: "Desenvolvedores",
       url: "/developers",
       icon: IconUserCode,
     },
-
+    */
   ],
   navClouds: [
     {
@@ -126,7 +132,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             >
               <a href="#">
                 <LogoImage />
-              </a>
+              </a> 
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -136,7 +142,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   )

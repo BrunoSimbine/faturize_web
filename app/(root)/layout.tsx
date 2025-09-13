@@ -2,19 +2,15 @@ import type { Metadata } from "next";
 import "../globals.css";
 
 import { ThemeProvider } from "@/components/theme-provider"
-import { Martian_Mono, Geist_Mono } from 'next/font/google';
 
-const martian_mono = Martian_Mono({
-  subsets: ['latin'],
-  weight: ['200'],
-  variable: '--display-family',
-});
+import { EB_Garamond } from 'next/font/google'
 
-const geist_mono = Geist_Mono({
+const ebGaramond = EB_Garamond({
   subsets: ['latin'],
-  weight: ['300'],
-  variable: '--text-family',
-});
+  weight: ['500', '700'], // Você pode escolher os pesos que quiser
+  variable: '--font-eb-garamond', // Opcional, útil para usar como variável CSS
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -27,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${martian_mono.variable} ${geist_mono.variable}`} suppressHydrationWarning>
+    <html lang="en" className={ebGaramond.className} suppressHydrationWarning>
       <body
         className={`antialiased`}
       >

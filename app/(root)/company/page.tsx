@@ -26,7 +26,24 @@ import { Navbar } from "@/components/navbar"
 
 import { createCompany, getCompanies, refreshToken } from '@/services/api';
 
+function daysSince(dateString: string): number {
+  const inputDate = new Date(dateString); // datetime da API
+  const now = new Date();
+
+  // Zera as horas para comparar apenas os dias
+  const startOfInput = new Date(inputDate.getFullYear(), inputDate.getMonth(), inputDate.getDate());
+  const startOfNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  const diffInMs = startOfNow.getTime() - startOfInput.getTime();
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+  return diffInDays;
+}
+
 export default function Company() {
+
+// utils/date.ts
+
 
   type Company = {
     name: string;
@@ -189,7 +206,7 @@ export default function Company() {
 
       {/* Informações abaixo da imagem */}
       <div className="text-sm font-medium">{company.name}</div>
-      <div className="text-xs text-muted-foreground">Updated 6 days ago</div>
+      <div className="text-xs text-muted-foreground">{daysSince(company.dateCreated)} days ago</div>
     </div>
   </div>
 ))}

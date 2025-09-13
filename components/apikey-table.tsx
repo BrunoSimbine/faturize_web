@@ -1,11 +1,10 @@
 "use client"
-import { getAllOrders, getMethods } from '@/services/api';
+import { OrdersDialog } from "@/components/orders-dialog";
+import { getApiKeys } from '@/services/api';
 import { Skeleton } from "@/components/ui/skeleton"
 import type { UniqueIdentifier } from '@dnd-kit/core';
 
-import { OrderActionsCell } from "@/components/order-actions-cell"
-import { IconPlus } from "@tabler/icons-react"
-import { useRouter } from 'next/navigation';
+import { ApiKeyActionsCell } from "@/components/apikey-actions-cell"
 
 import {
   Sheet,
@@ -43,22 +42,14 @@ import {
 } from "@tanstack/react-table"
 
 import {
-  CheckCircle2Icon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronsLeftIcon,
   ChevronsRightIcon,
-  LoaderIcon,
-  ClockIcon,
-  XCircleIcon,
 } from "lucide-react"
 
-import { z } from "zod"
-
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
   Select,
@@ -86,30 +77,27 @@ function formatDate(inputDate: string): string {
 
     const day: number = date.getDate();
     const month: string = months[date.getMonth()];
-
+    const year: string = date.getFullYear().toString();
     const hour: string = date.getHours().toString().padStart(2, '0');
 
-    return `${day} ${month}, ${hour}h`;
+    return `${day}/${month}/${year}, ${hour}h`;
 }
 
 function shortenUUID(uuid: string, size: number): string {
     return uuid.substring(0, size);
 }
 
-export const schema = z.object({
-  id: z.string(),
-  dateCreated: z.string(),
-  dateUpdated: z.string(),
-  description: z.string(),
-  amount: z.number(),
-  paid: z.number(),
-  expires: z.string(),
-  status: z.number(),
-})
+type ApiKeyType = {
+  id: string
+  name: string
+  dateCreated: string
+  dateUpdated: string
+  lastActivity: string
+  callbackUrl: string
+}
 
 
-
-const columns: ColumnDef<z.infer<typeof schema>>[] = [
+const columns: ColumnDef<ApiKeyType>[] = [
   {
     accessorKey: "id",
     header: () => <div className="text-left pl-2">Id</div>,
@@ -122,33 +110,21 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     },
   },
   {
-    accessorKey: "amount",
-    header: () => <div className="text-left text-xs">Montante</div>,
+    accessorKey: "name",
+    header: () => <div className="text-left text-xs">Label</div>,
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("amount"))
 
-      // Format the amount as a dollar amount
-      const formatted = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "MZN",
-      }).format(amount)
 
-      return <div className="text-left font-bold">{formatted}</div>
+      return <div className="text-left font-bold">{row.getValue("name")}</div>
     },
   },
   {
-    accessorKey: "paid",
-    header: () => <div className="text-left hidden md:block">Pago</div>,
+    accessorKey: "callbackUrl",
+    header: () => <div className="text-left">Callback</div>,
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("paid"))
 
-      // Format the amount as a dollar amount
-      const formatted = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "MZN",
-      }).format(amount)
 
-      return <div className="text-left font-medium hidden md:block">{formatted}</div>
+      return <div className="text-left font-medium">{row.getValue("callbackUrl")}</div>
     },
   },
   {
@@ -161,78 +137,29 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     },
   },
   {
-    accessorKey: "expires",
+    accessorKey: "lastActivity",
     header: () => (
-      <div className="text-left hidden sm:block">Expira</div>
+      <div className="text-left hidden sm:block">Ultimo Uso</div>
     ),
     cell: ({ row }) => {
-      const date = row.getValue("expires") as string;
-      const isNull = row.original.expires === null;
-      return (
-        <div className="text-left font-medium hidden sm:block">
-          {isNull ? "---" : formatDate(date)}
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "description",
-    header: () => (
-      <div className="text-left hidden lg:block">Descricao</div>
-    ),
-    cell: ({ row }) => {
-      const isNull = row.original.description === null;
-      return (
-        <div className="text-left font-medium hidden sm:block">
-          {isNull ? "---" : row.original.description}
-        </div>
-      );
-    },
-  },
+      const date = row.getValue("lastActivity") as string;
 
-{
-  accessorKey: "status",
-  header: () => <div className="text-left text-xs">Status</div>,
-  cell: ({ row }) => (
-    <Badge 
-      variant="outline"
-      className="flex text-muted-foreground"
-    >
-      {row.original.status === 0 && (
-        <>
-          <LoaderIcon />
-          Pendente
-        </>
-      )}
-      {row.original.status === 1 && (
-        <>
-          <CheckCircle2Icon className="text-green-500 dark:text-green-400" />
-          Pago
-        </>
-      )}
-      {row.original.status === 2 && (
-        <>
-          <ClockIcon className="text-yellow-500 dark:text-yellow-400" />
-          Expirado
-        </>
-      )}
-      {row.original.status === 3 && (
-        <>
-          <XCircleIcon className="text-red-500 dark:text-red-400" />
-          Cancelado
-        </>
-      )}
-    </Badge>
-  ),
-},
+      return (
+        <div className="text-left font-medium hidden sm:block">
+          {formatDate(date)}
+        </div>
+      );
+    },
+  },
+  
 {
   id: "actions",
-  cell: ({ row }) => <OrderActionsCell row={row} />,
+  cell: ({ row }) => <ApiKeyActionsCell row={row} />,
 }
 
 ]
 
-function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
+function DraggableRow({ row }: { row: Row<ApiKeyType> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.original.id,
   })
@@ -258,30 +185,22 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
 }
 
 
-export function OrdersTable() {
+export function ApiKeyTable() {
   const [loading, setLoading] = React.useState(true);
-  const router = useRouter();
 
   React.useEffect(() => {
     async function fetchData() {
 
-      const orders = await getAllOrders();
-      const payMethods = await getMethods();
-      setData(orders);
-      setMethods(payMethods);
+      const apiKeys = await getApiKeys();
+      setData(apiKeys);
       setLoading(false);
-      console.log(methods);
       console.log(columnVisibility);
-
     }
 
     fetchData();
   }, []);
-const handleClick = async () => {
-  router.replace('/orders/add');
-}
+
   const [data, setData] = React.useState([]);
-  const [methods, setMethods] = React.useState([]);
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
@@ -332,11 +251,11 @@ const handleClick = async () => {
     {loading ? (
       <div className="flex flex-col space-y-3 my-2">
         <div className="flex justify-between">
-          <Skeleton className="h-[35px] w-[400px]" />
+          <span></span>
           <Skeleton className="h-[35px] w-[100px]" />
         </div>
 
-        <Skeleton className="h-[425px] w-full rounded-xl" />
+        <Skeleton className="h-[325px] w-full rounded-xl" />
 
       </div>
       ) : (
@@ -344,15 +263,8 @@ const handleClick = async () => {
 
 <div>
       <div className="py-4 flex justify-between mx-auto">
-        <Input
-          placeholder="Buscar Id"
-          value={(table.getColumn("id")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("id")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm mr-2"
-        />
-        <Button onClick={handleClick} variant="secondary"><IconPlus /> Adicionar</Button>
+        <span></span>
+        <OrdersDialog />
       </div>
 
         <div className="overflow-hidden rounded-lg border">
@@ -485,7 +397,7 @@ const handleClick = async () => {
 
 
 
-function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
+function TableCellViewer({ item }: { item: ApiKeyType }) {
 
   return (
     <Sheet>

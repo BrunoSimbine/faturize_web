@@ -1,5 +1,6 @@
 "use client"
 
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { MoreVerticalIcon } from "lucide-react"
+import { useState, useEffect } from "react"
 
 import {
   Avatar,
@@ -20,136 +22,118 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
 
 import { Separator } from "@/components/ui/separator"
 
+import { getAllMethods, getWallets, deleteWallet } from '@/services/api';
+import { SparkpagaForm } from "@/components/sparkpaga-form"
+
 export default function SharePage() {
+
+  type PaymentMethod = {
+    id: string;
+    name: string;
+  }; 
+
+  type Wallet = {
+    id: string;
+    clientId: string;
+    publicKey: string;
+    label: string;
+    payMethodId: string;
+    account: string;
+    accountName: string;
+  };
+
+  const [wallets, setWallets] = useState<Wallet[]>([]);
+  const [methods, setMethods] = useState<PaymentMethod[]>([]);
+  const [payMethodId, setPayMethodId] = useState('');
+
+
+  useEffect(() => {
+    async function fetchData() {
+
+      const payMethods = await getAllMethods();
+      const myWallets = await getWallets();
+      console.log(methods);
+      console.log(payMethodId);
+      setPayMethodId(payMethods[0].id);
+      setMethods(payMethods);
+      setWallets(myWallets);
+    }
+
+    fetchData();
+  }, []);
+
   return (
     <div className="p-2 mt-4 md:px-3">
       <div className="border-b pb-2 mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Gateways de Pagamento</h1>
+        <h1 className="text-xl font-semibold">Carteiras</h1>
       </div>
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle>Adicionar Gateway</CardTitle>
+          <CardTitle>Adicionar Carteira</CardTitle>
           <CardDescription>
-            Configure um novo método de pagamento para sua plataforma.
+            Configure uma nova carteira para sua conta.
           </CardDescription>
         </CardHeader>
 
         <CardContent>
-          <div className="flex space-x-2">
-            <div className="flex w-full flex-col gap-6">
-              <Tabs defaultValue="smart">
-                <TabsList className="mb-3">
-                  <TabsTrigger value="smart">SimGateway</TabsTrigger>
-                  <TabsTrigger value="mpesa">M-Pesa</TabsTrigger>
-                </TabsList>
 
-                <TabsContent value="smart">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Credenciais SimGateway</CardTitle>
-                      <CardDescription>
-                        Insira os dados fornecidos pelo SimGateway.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="grid gap-6">
-                      <div className="grid gap-3">
-                        <Label htmlFor="nome">Nome</Label>
-                        <Input id="nome" placeholder="Nome do gateway" />
-                      </div>
-                      <div className="grid gap-3">
-                        <Label htmlFor="public-key">Chave Pública</Label>
-                        <Input id="public-key" />
-                      </div>
-                      <div className="grid gap-3">
-                        <Label htmlFor="private-key">Chave Privada</Label>
-                        <Input id="private-key" />
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button>Salvar</Button>
-                    </CardFooter>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="mpesa">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Configuração M-Pesa</CardTitle>
-                      <CardDescription>
-                        Preencha os campos abaixo para integrar o M-Pesa.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="grid gap-6">
-                      <div className="grid gap-3">
-                        <Label htmlFor="consumer-key">Consumer Key</Label>
-                        <Input id="consumer-key" />
-                      </div>
-                      <div className="grid gap-3">
-                        <Label htmlFor="consumer-secret">Consumer Secret</Label>
-                        <Input id="consumer-secret" />
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button>Salvar</Button>
-                    </CardFooter>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-            </div>
-          </div>
+          <SparkpagaForm />
 
           <Separator className="my-4" />
 
           <div className="space-y-4">
             <div className="text-sm font-medium">
-              Métodos de pagamento ativos
+              Carteiras ativas
             </div>
             <div className="grid gap-6">
-              <div className="flex items-center justify-between space-x-4">
-                <div className="flex items-center space-x-4">
-                  <Avatar>
-                    <AvatarImage src="/avatars/03.png" alt="Imagem do usuário" />
-                    <AvatarFallback>OM</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-sm font-medium leading-none">
-                      Olivia Martin
-                    </p>
-                    <p className="text-sm text-muted-foreground">+258841234567</p>
+
+              {wallets.map((item) => (
+
+                <div key={item.id} className="flex items-center justify-between space-x-4">
+                  <div className="flex items-center space-x-4">
+                    <Avatar>
+                      <AvatarImage src="/avatars/03.png" alt="Imagem do usuário" />
+                      <AvatarFallback>OM</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-medium leading-none">
+                        {item.label}
+                      </p>
+                      <p className="text-sm text-muted-foreground">{item.account}</p>
+                    </div>
                   </div>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
+                        size="icon"
+                      >
+                        <MoreVerticalIcon />
+                        <span className="sr-only">Abrir menu</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-32">
+                      <DropdownMenuItem
+                        onClick={async () => {
+                          await deleteWallet(item.id);
+                          window.location.reload();
+                        }}
+                      >
+                        Apagar
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
-                      size="icon"
-                    >
-                      <MoreVerticalIcon />
-                      <span className="sr-only">Abrir menu</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-32">
-                    <DropdownMenuItem>Desativar</DropdownMenuItem>
-                    <DropdownMenuItem>Remover</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              ))}
+
             </div>
           </div>
         </CardContent>

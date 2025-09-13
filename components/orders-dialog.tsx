@@ -17,8 +17,9 @@ import {
 import { IconPlus } from "@tabler/icons-react"
 import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { getMethods, createOrder } from '@/services/api';
+import { getMethods } from '@/services/api';
 import { Label } from "@/components/ui/label"
+
 
 export function OrdersDialog() {
 
@@ -45,7 +46,7 @@ export function OrdersDialog() {
         return;
       }
       // Simulando uma ação async, como login
-      await createOrder({amount: parseFloat(amount), payMethodId: payMethodId, account: payerAccount, expires: date.toISOString()});
+      // await createOrder({amount: parseFloat(amount), payMethodId: payMethodId, account: payerAccount, expires: date.toISOString()});
       setOpen(false);
       setAmount('')
       setPayerAccount('')

@@ -24,6 +24,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Calendar } from "@/components/ui/calendar"
 import { MoreVerticalIcon } from "lucide-react"
 import { isBefore, startOfDay } from "date-fns"
+import { useRouter } from 'next/navigation';
 
 import { cancelOrder, extendOrder, manualConfirmOrder } from '@/services/api';
 import type { Row } from "@tanstack/react-table"
@@ -74,12 +75,12 @@ export function OrderActionsCell({ row }: { row: Row<OrderType> }) {
     }
     setOpenExtend(false)
   }
-
+  const router = useRouter();
   const isStatus0 = row.original.status === 0 // Pendente
   const isStatus1 = row.original.status === 1 // Pago
   const isStatus2 = row.original.status === 2 // Expirado
   const isStatus3 = row.original.status === 3 // Cancelado
-
+  const isNull = row.original.expires === null
   return (
     <>
       <DropdownMenu>
@@ -90,10 +91,13 @@ export function OrderActionsCell({ row }: { row: Row<OrderType> }) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-32">
+          <DropdownMenuItem onClick={() => router.replace('/orders/detail/' + row.original.id)}>
+            Detalhe
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setOpenManual(true)} disabled={!isStatus0}>
             Pagamento Manual
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setOpenExtend(true)} disabled={isStatus1 || isStatus3}>
+          <DropdownMenuItem onClick={() => setOpenExtend(true)} disabled={isStatus1 || isStatus3 || isNull}>
             Prorrogar
           </DropdownMenuItem>
           <DropdownMenuSeparator />
