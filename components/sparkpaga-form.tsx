@@ -4,15 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "@/components/ui/card"
-
+import { IconPlus } from "@tabler/icons-react"
 import { Label } from "@/components/ui/label"
 
 import {
@@ -27,7 +19,17 @@ import {
 
 import { Input } from "@/components/ui/input"
 
-import { getAllMethods, createWallet, getWallets } from '@/services/api';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+
+import { getAllMethods, createWallet } from '@/services/api';
 
 
 export function SparkpagaForm() {
@@ -38,20 +40,10 @@ export function SparkpagaForm() {
     dateCreated: string;
     dateUpdated: string;
   };
-
-  type Wallet = {
-    id: string;
-    clientId: string;
-    publicKey: string;
-    label: string;
-    payMethodId: string;
-    account: string;
-    accountName: string;
-  };
-
+ 
+  const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
-  const [wallets, setWallets] = useState<Wallet[]>([]);
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>({
     id: "",
     name: "",
@@ -65,12 +57,11 @@ export function SparkpagaForm() {
 
   useEffect(() => {
     async function fetchData() {
-      console.log(wallets)
-      const payMethods = await getAllMethods();
-      const myWallets = await getWallets();
-      setSelectedMethod(payMethods[0].id);
+
+      const payMethods = await getAllMethods();;
+      setSelectedMethod(payMethods[0]);
+      console.log(selectedMethod);
       setMethods(payMethods);
-      setWallets(myWallets);
     }
 
     fetchData();
@@ -86,13 +77,15 @@ export function SparkpagaForm() {
         })
       } else {
         // Simulando uma ação async, como login
-        console.log(selectedMethod)
+        if(selectedMethod.id == ""){
+          console.log("Nao ha nada!");
+        }
         await createWallet({clientId: clientId, publicKey: publicKey, label: label, payMethodId: selectedMethod.id, account: "+258"+account});
         setAccount('')
         setClientId('')
         setPublicKey('')
         setLabel('')
-
+        setOpen(false);
         window.location.reload();        
       }
 
@@ -110,18 +103,27 @@ export function SparkpagaForm() {
       }
     } finally {
       setLoading(false);
+
     }
 
   }
   return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Credenciais SparkPaga</CardTitle>
-          <CardDescription>
-            Insira os dados fornecidos pelo SparkPaga.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-6">
+
+
+
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline"><IconPlus /> Adicionar</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Credenciais SparkPaga</DialogTitle>
+              <DialogDescription>
+                Insira os dados fornecidos pelo SparkPaga.
+              </DialogDescription>
+            </DialogHeader>
+
+
           <div className="grid gap-3">
             <Label htmlFor="label">Label</Label>
             <Input
@@ -142,7 +144,7 @@ export function SparkpagaForm() {
                 <Select
                   onValueChange={(value) => {
                     const method = methods.find((m) => m.id === value);
-                    if (method) setSelectedMethod(method);
+                    if (method) { setSelectedMethod(method); console.log(method)}
                   }}
                 >
                   <SelectTrigger className="w-full">
@@ -200,19 +202,20 @@ export function SparkpagaForm() {
               onChange={e => setPublicKey(e.target.value)}
               />
           </div>
-        </CardContent>
-        <CardFooter>
-          <Button type="button" disabled={loading} onClick={handleClick}>
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Aguarde
-              </>
-            ) : (
-              'Salvar'
-            )}
-          </Button>
-        </CardFooter>
-      </Card>
+
+            <DialogFooter>
+              <Button onClick={handleClick} type="button" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Aguarde
+                  </>
+                ) : (
+                  'Salvar'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
   )
 }

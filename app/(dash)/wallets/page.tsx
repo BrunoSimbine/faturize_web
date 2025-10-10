@@ -26,15 +26,10 @@ import {
 
 import { Separator } from "@/components/ui/separator"
 
-import { getAllMethods, getWallets, deleteWallet } from '@/services/api';
+import { getWallets, deleteWallet } from '@/services/api';
 import { SparkpagaForm } from "@/components/sparkpaga-form"
 
 export default function SharePage() {
-
-  type PaymentMethod = {
-    id: string;
-    name: string;
-  }; 
 
   type Wallet = {
     id: string;
@@ -47,19 +42,11 @@ export default function SharePage() {
   };
 
   const [wallets, setWallets] = useState<Wallet[]>([]);
-  const [methods, setMethods] = useState<PaymentMethod[]>([]);
-  const [payMethodId, setPayMethodId] = useState('');
 
 
   useEffect(() => {
     async function fetchData() {
-
-      const payMethods = await getAllMethods();
       const myWallets = await getWallets();
-      console.log(methods);
-      console.log(payMethodId);
-      setPayMethodId(payMethods[0].id);
-      setMethods(payMethods);
       setWallets(myWallets);
     }
 

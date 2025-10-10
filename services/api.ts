@@ -4,7 +4,7 @@ import { setToken } from '@/services/auth';
 import { getToken, clearToken } from '@/services/auth';
 
 const api = axios.create({
-  baseURL: 'http://192.168.43.88:5000/v1',
+  baseURL: 'https://api.faturizze.com/v1',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -128,6 +128,23 @@ export async function getCompanies() {
     }
 }
 
+export async function getPackages() {
+    const token = getToken() as Auth;
+
+    if(token)
+    {
+      const response = await api.get(`/Package/get/all`, {
+        headers: {
+          Authorization: `Bearer ${token.token}`,
+        },
+      });
+      return response.data;
+
+    }else{
+      return {}
+    }
+}
+
 export async function getApiKeys() {
     const token = getToken() as Auth;
 
@@ -161,6 +178,58 @@ export async function getCompany() {
       return {}
     }
 }
+
+export async function getSignature() {
+    const token = getToken() as Auth;
+
+    if(token)
+    {
+      const response = await api.get('/Signature/current', {
+        headers: {
+          Authorization: `Bearer ${token.token}`,
+        },
+      });
+      return response.data;
+
+    }else{
+      return {}
+    }
+}
+
+export async function getSignatures() {
+    const token = getToken() as Auth;
+
+    if(token)
+    {
+      const response = await api.get('/Signature/my', {
+        headers: {
+          Authorization: `Bearer ${token.token}`,
+        },
+      });
+      return response.data;
+
+    }else{
+      return {}
+    }
+}
+
+export async function getPackage(packageId: string) {
+    const token = getToken() as Auth;
+
+    if(token)
+    {
+      const response = await api.get('/Package/get/' + packageId, {
+        headers: {
+          Authorization: `Bearer ${token.token}`,
+        },
+      });
+      return response.data;
+
+    }else{
+      return {}
+    }
+}
+
 
 export async function getWallets() {
     const token = getToken() as Auth;

@@ -81,10 +81,10 @@ const Navbar = ({
   };
 
   return (
-    <section className="border-b">
+    <section>
       <div className="container mx-auto">
         {/* Desktop Menu */}
-        <nav className="hidden justify-between lg:flex my-2">
+        <nav className="hidden justify-between lg:flex my-4">
           <div className="flex items-center gap-6">
             {/* Logo */}
             <a href={logo.url} className="flex items-center gap-2">
@@ -102,15 +102,11 @@ const Navbar = ({
 
         {/* Mobile Menu */}
         <div className="block lg:hidden">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between my-3">
             {/* Logo */}
             <a href={logo.url} className="flex items-center gap-2">
               <span className="text-lg font-semibold tracking-tighter">
-                <img
-                  src="https://localhost/logo.png"
-                  alt="Image"
-                  className=" h-[30px] object-cover dark:brightness-[0.2] dark:grayscale"
-                />
+                <LogoImage />
               </span>
             </a>
             <Sheet>

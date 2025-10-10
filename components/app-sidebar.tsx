@@ -58,8 +58,8 @@ const data = {
       icon: IconListDetails,
     },
     {
-      title: "Precos",
-      url: "/pricing",
+      title: "Assinaturas",
+      url: "/signature",
       icon: IconPackages,
     },
     /*

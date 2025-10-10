@@ -76,7 +76,6 @@ export default function OrderDetailPage({ params }: PageProps) {
       } catch(error) {
         console.log(error)
       }
-
     }
 
     fetchData();

@@ -83,8 +83,10 @@ function formatDate(inputDate: string): string {
     const month: string = months[date.getMonth()];
 
     const hour: string = date.getHours().toString().padStart(2, '0');
+    const minutes: string = date.getMinutes().toString().padStart(2, '0');
 
-    return `${day} ${month}, ${hour}h`;
+
+    return `${day} ${month}, ${hour}:${minutes}`;
 }
 
 function getPayMethodNameByWalletId(walletId: string): string | null {
@@ -244,6 +246,11 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
       ))}
     </TableRow>
   )
+}
+
+export function handleTransactionDetails(id: string)
+{
+  console.log(id);
 }
 
 export function TransactionsTable() {
@@ -467,23 +474,85 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="link" className="w-fit px-0 mx-0 text-left text-foreground ">
+        <Button onClick={() => handleTransactionDetails(item.id)} variant="link" className="w-fit px-0 mx-0 text-left text-foreground ">
           {shortenUUID(item.id, 10)}
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="flex flex-col">
         <SheetHeader className="gap-1">
-          <SheetTitle>{item.id}</SheetTitle>
+          <SheetTitle>Detalhes da transacao</SheetTitle>
           <SheetDescription>
-            Showing total visitors for the last 6 months
+            Detalhes da transacao
           </SheetDescription>
         </SheetHeader>
-        <div className="flex flex-1 flex-col gap-4 overflow-y-auto py-4 text-sm">
-          
-          
+        <div className="text-sm flex flex-1 flex-col gap-4 overflow-y-auto gap-1 mx-5">
+          <div className="flex justify-between">
+            <div>
+              <p className="font-bold">ID da Transacao</p> 
+            </div>
+            <div>
+              <p>{item.id}</p> 
+            </div>          
+          </div>
+          <div className="flex justify-between">
+            <div>
+              <p className="font-bold">Data da Transacao</p> 
+            </div>
+            <div>
+              <p>{formatDate(item.dateCreated)}</p> 
+            </div>
+          </div>
+          <div className="flex justify-between">
+            <div>
+              <p className="font-bold">Metodo</p> 
+            </div>
+            <div>
+              <p>{getPayMethodNameByWalletId(item.walletId)}</p> 
+            </div>
+          </div>
+
+          <div className="flex justify-between">
+            <div>
+              <p className="font-bold">Emissor</p> 
+            </div>
+            <div>
+              <p>{item.name}</p> 
+            </div>          
+          </div>
+          <div className="flex justify-between">
+            <div>
+              <p className="font-bold">Conta</p> 
+            </div>
+            <div>
+              <p>{item.account}</p>
+            </div>         
+          </div>
+          <div className="flex justify-between">
+            <div>
+              <p className="font-bold">Montante</p> 
+            </div>
+            <div>
+                <p>{item.isReceived ? "+ " : "- "}{new Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: "MZN",
+                  }).format(Number(item.amount))}
+              </p>
+            </div>         
+          </div>
+          <div className="flex justify-between">
+            <div>
+              <p className="font-bold">Taxa</p> 
+            </div>
+            <div>
+              <p>{new Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: "MZN",
+                  }).format(Number(item.tax))}
+              </p>
+            </div>         
+          </div>
         </div>
         <SheetFooter className="mt-auto flex gap-2 sm:flex-col sm:space-x-0">
-          <Button className="w-full">Submit</Button>
           <SheetClose asChild>
             <Button variant="outline" className="w-full">
               Done

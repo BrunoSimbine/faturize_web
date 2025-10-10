@@ -91,7 +91,6 @@ export default function Company() {
         name: name,
         description: description,
         imageUrl: 'default.png'
-
       });
 
       setName('');
@@ -103,15 +102,12 @@ export default function Company() {
     } catch (error) {
       console.error(error);
     }
-
   };
 
   const handleConnect = async (id: string) => {
     await refreshToken(id);
-
     router.replace('/dashboard');
   };
-
 
   return (
     <div className="mx-3">
@@ -143,7 +139,6 @@ export default function Company() {
                   className="col-span-3"
                 />
               </div>
-
             </div>
             <DialogFooter>
               <Button onClick={handleSave} type="button" disabled={loading}>
@@ -158,9 +153,7 @@ export default function Company() {
               </Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
-
-        
+        </Dialog>        
       </div>
       <div className="m-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 container mx-auto">
 
@@ -170,7 +163,7 @@ export default function Company() {
       {/* Imagem com botões sobrepostos */}
       <div className="relative w-full h-48 rounded-lg overflow-hidden mb-3">
         <img
-          src="https://minio.privaxnet.com/faturize/foto.jpg"
+          src="https://minio.faturizze.com/statics/project.jpg"
           alt="Image"
           className="w-full h-full object-cover"
         />
@@ -210,9 +203,6 @@ export default function Company() {
     </div>
   </div>
 ))}
-
-
-
       </div>
     </div>
   );
