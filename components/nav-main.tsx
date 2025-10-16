@@ -32,15 +32,15 @@ export function NavMain({
                 <SidebarMenuItem
                   key={item.title}
                   className={isActive 
-                    ? "bg-accent text-accent-foreground rounded-md transition-colors hover:text-accent-foreground" 
-                    : "text-muted-foreground transition-colors hover:text-foreground"
+                    ? "bg-accent text-accent-foreground rounded-md transition-colors hover:text-accent-foreground text-lg" 
+                    : "text-muted-foreground transition-colors hover:text-foreground text-lg"
                   }
                 >
                   <Link href={item.url}>
 
                     <SidebarMenuButton tooltip={item.title}>
                       {item.icon && <item.icon />}
-                      <span>{item.title}</span>
+                      <span className="text-base my-1">{item.title}</span>
                     </SidebarMenuButton>
                   </Link>
                 </SidebarMenuItem>

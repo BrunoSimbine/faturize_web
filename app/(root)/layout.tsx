@@ -3,13 +3,12 @@ import "../globals.css";
 
 import { ThemeProvider } from "@/components/theme-provider"
 
-import { EB_Garamond } from 'next/font/google'
+import { Jost } from "next/font/google"
 
-const ebGaramond = EB_Garamond({
-  subsets: ['latin'],
-  weight: ['500', '700'], // Você pode escolher os pesos que quiser
-  variable: '--font-eb-garamond', // Opcional, útil para usar como variável CSS
-  display: 'swap',
+const jost = Jost({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"], // podes ajustar conforme quiseres
+  variable: "--font-jost",
 })
 
 export const metadata: Metadata = {
@@ -23,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={ebGaramond.className} suppressHydrationWarning>
+    <html lang="en" className={jost.className} suppressHydrationWarning>
       <body
         className={`antialiased`}
       >

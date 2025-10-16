@@ -377,11 +377,27 @@ export async function getAllMethods() {
     }
 }
 
+export async function getDailySummary() {
+    const token = getToken() as Auth;
+    if(token)
+    {
+      const response = await api.get('/DailySummary/get', {
+        headers: {
+          Authorization: `Bearer ${token.token}`,
+        },
+      });
+      return response.data;
+
+    } else {
+      return {}
+    }
+}
+
 export async function getTransactions() {
     const token = getToken() as Auth;
     if(token)
     {
-      const response = await api.get('/transaction/get/all', {
+      const response = await api.get('/transaction/get', {
         headers: {
           Authorization: `Bearer ${token.token}`,
         },
