@@ -135,10 +135,10 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     cell: ({ row }) => {
       const amount = row.original.amount;
       const isReceived = row.original.isReceived; // Acessa o valor de isReceived
-      const formatted = new Intl.NumberFormat("en-US", {
+      const formatted = new Intl.NumberFormat("eng-MZ", {
         style: "currency",
         currency: "MZN",
-      }).format(amount);
+      }).format(amount)replace("MZN", "MTn");
 
       // Define a classe e o símbolo com base em isReceived
       const amountClass = isReceived
@@ -159,10 +159,10 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     header: () => <div className="text-left">Taxa</div>,
     cell: ({ row }) => {
       const amount = row.original.tax;
-      const formatted = new Intl.NumberFormat("en-US", {
+      const formatted = new Intl.NumberFormat("eng-MZ", {
         style: "currency",
         currency: "MZN",
-      }).format(Number(amount));
+      }).format(Number(amount))replace("MZN", "MTn");
       return <div className="text-left font-medium w-[60px]">{formatted}</div>;
     },
   },

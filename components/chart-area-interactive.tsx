@@ -45,10 +45,10 @@ const CustomTooltip: React.FC<TooltipProps<number, string>> = ({ active, payload
     <div className="rounded-xl bg-indigo-500 p-1 shadow-lg text-white">
       <p className="text-xs opacity-80 ">Dia {label}</p>
       <p className="font-semibold text-xs">
-        {new Intl.NumberFormat("pt-MZ", {
+        {new Intl.NumberFormat("eng-PT", {
           style: "currency",
           currency: "MZN",
-        }).format(value)}
+        }).format(value).replace("MZN", "MTn")}
       </p>
     </div>
   );
@@ -86,10 +86,10 @@ export function WalletMonthlyCharts() {
     <Card className="mb-4">
       <CardHeader>
         <CardTitle>
-          {new Intl.NumberFormat("pt-MZ", {
+          {new Intl.NumberFormat("eng-MZ", {
             style: "currency",
             currency: "MZN",
-          }).format(total) }
+          }).format(total).replace("MZN", "MTn") }
           <Badge variant="outline" className="text-green-500 bg-green-500/10 border-none ml-2">
             <TrendingUp className="h-4 w-4" />
             <span>{total/20}%</span>

@@ -45,10 +45,10 @@ export function SectionCards() {
 
   }, []);
 
-    const creditos = new Intl.NumberFormat("pt-MZ", {
+    const creditos = new Intl.NumberFormat("eng-PT", {
       style: "currency",
       currency: "MZN",
-    }).format(company.balance)
+    }).format(company.balance).replace("MZN", "MTn")
 
   return (
 <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 mb-2">
@@ -73,10 +73,10 @@ export function SectionCards() {
         <CardHeader>
           <CardDescription>Total Recebido</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {new Intl.NumberFormat("pt-MZ", {
+            {new Intl.NumberFormat("eng-MZ", {
               style: "currency",
               currency: "MZN",
-            }).format(company?.received) }
+            }).format(company?.received).replace("MZN", "MTn") }
           </CardTitle>
         </CardHeader>
       </Card>
@@ -84,10 +84,10 @@ export function SectionCards() {
         <CardHeader>
           <CardDescription>Total Enviado</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {new Intl.NumberFormat("pt-MZ", {
+            {new Intl.NumberFormat("eng-MZ", {
               style: "currency",
               currency: "MZN",
-            }).format(company?.send) }
+            }).format(company?.send).replace("MZN", "MTn") }
           </CardTitle>
         </CardHeader>
       </Card>
@@ -95,10 +95,11 @@ export function SectionCards() {
         <CardHeader>
           <CardDescription>Taxas Pagas</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {new Intl.NumberFormat("pt-MZ", {
+            {new Intl.NumberFormat("eng-MZ", {
               style: "currency",
               currency: "MZN",
-            }).format(company?.tax) }
+            }).format(company?.tax)
+            .replace("MZN", "MTn") }
           </CardTitle>
         </CardHeader>
       </Card>
