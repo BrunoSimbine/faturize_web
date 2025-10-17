@@ -138,7 +138,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       const formatted = new Intl.NumberFormat("eng-MZ", {
         style: "currency",
         currency: "MZN",
-      }).format(amount)replace("MZN", "MTn");
+      }).format(amount).replace("MZN", "MTn");
 
       // Define a classe e o símbolo com base em isReceived
       const amountClass = isReceived
@@ -162,7 +162,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       const formatted = new Intl.NumberFormat("eng-MZ", {
         style: "currency",
         currency: "MZN",
-      }).format(Number(amount))replace("MZN", "MTn");
+      }).format(Number(amount)).replace("MZN", "MTn");
       return <div className="text-left font-medium w-[60px]">{formatted}</div>;
     },
   },
