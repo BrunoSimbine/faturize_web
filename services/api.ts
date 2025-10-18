@@ -4,7 +4,7 @@ import { setToken } from '@/services/auth';
 import { getToken, clearToken } from '@/services/auth';
 
 const api = axios.create({
-  baseURL: 'http://192.168.43.88:5000/v1',
+  baseURL: 'https://api.faturizze.com/v1',
   headers: {
     'Content-Type': 'application/json',
   },
