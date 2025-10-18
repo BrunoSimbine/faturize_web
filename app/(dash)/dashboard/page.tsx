@@ -1,9 +1,11 @@
+"use client"
+
 import { SectionCards } from "@/components/section-cards"
 import { WalletMonthlyCharts } from "@/components/chart-area-interactive"
 import * as React from "react"
 
 
-export default async function Page() {
+export default function Page() {
 
   return (
     <div className="flex flex-col gap-2 py-4 md:py-6">

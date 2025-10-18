@@ -67,13 +67,16 @@ import {
 
 // 📅 Formatação de data moderna e localizada
 function formatDate(inputDate: string): string {
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   return new Intl.DateTimeFormat("pt-MZ", {
     day: "2-digit",
     month: "short",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone, // ajusta automaticamente para o fuso do sistema
   }).format(new Date(inputDate));
 }
+
 
 // 🔢 Função auxiliar para encurtar IDs
 function shortenUUID(uuid: string, size: number): string {
@@ -122,7 +125,7 @@ function formatCurrency(value: number): string {
     currency: "MZN",
   })
     .format(value)
-    .replace("MZN", "MTn");
+    .replace("MTn", "MT");
 }
 
 function handleTransactionDetails(id: string) {

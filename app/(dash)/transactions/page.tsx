@@ -1,7 +1,9 @@
+"use client"
+
 import { TransactionsTable } from "@/components/transactions-table"
 import * as React from "react"
 
-export default async function TransactionPage() {
+export default function TransactionPage() {
 
   return ( 
 

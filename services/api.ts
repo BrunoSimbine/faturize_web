@@ -4,7 +4,7 @@ import { setToken } from '@/services/auth';
 import { getToken, clearToken } from '@/services/auth';
 
 const api = axios.create({
-  baseURL: 'https://api.faturizze.com/v1',
+  baseURL: 'http://192.168.43.88:5000/v1',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -80,6 +80,22 @@ export async function createWallet(data: {clientId: string, publicKey: string, l
   if(token)
   {
       const response = await api.post('/Wallet/add', data, {
+      headers: {
+        Authorization: `Bearer ${token.token}`,
+      },
+    });
+    return response.data;
+  } else {
+    return {};
+  }
+}
+
+export async function createSignature(data: {packageId: string, account: string, isYearly: boolean}) {
+  const token = getToken() as Auth;
+
+  if(token)
+  {
+      const response = await api.post('/Signature/add', data, {
       headers: {
         Authorization: `Bearer ${token.token}`,
       },
