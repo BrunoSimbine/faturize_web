@@ -48,7 +48,7 @@ export function SignatureForm() {
   return (
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline"><IconPlus /> Adicionar</Button>
+            <Button variant="outline" className="mb-3"><IconPlus /> Adicionar</Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>

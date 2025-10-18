@@ -5,9 +5,9 @@ export default async function TransactionPage() {
 
   return ( 
 
-    <div className="p-2 mt-4 md:px-3">
-      <div className="border-b pb-2 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Transacoes</h1>
+    <div className="mx-3 flex flex-col gap-2 py-4 md:py-6 p-2  md:px-3">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">Transações</h1>
       </div>
       <TransactionsTable />
     </div>

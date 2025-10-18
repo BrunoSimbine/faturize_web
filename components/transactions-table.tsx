@@ -4,46 +4,39 @@ import * as React from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 
 import { getTransactions, getWallets, getMethods } from '@/services/api';
-import { getLocalMethods, getLocalWallets, setLocalMethods, setLocalWallets } from "@/services/auth"; // ajuste o caminho se necessário
+import { setLocalMethods, setLocalWallets } from "@/services/auth";
 
 import type { UniqueIdentifier } from '@dnd-kit/core';
-
- 
 import {
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
+
 import {
   ColumnDef,
-  ColumnFiltersState,
   Row,
   SortingState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
+
 import {
-  CheckCircle2Icon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronsLeftIcon,
   ChevronsRightIcon,
-  LoaderIcon,
 } from "lucide-react"
 
 import { z } from "zod"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -53,7 +46,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-
 import {
   Sheet,
   SheetClose,
@@ -73,36 +65,22 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+// 📅 Formatação de data moderna e localizada
 function formatDate(inputDate: string): string {
-    const date = new Date(inputDate);
-
-    const months: string[] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-                              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-    const day: number = date.getDate();
-    const month: string = months[date.getMonth()];
-
-    const hour: string = date.getHours().toString().padStart(2, '0');
-    const minutes: string = date.getMinutes().toString().padStart(2, '0');
-
-
-    return `${day} ${month}, ${hour}:${minutes}`;
+  return new Intl.DateTimeFormat("pt-MZ", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(inputDate));
 }
 
-function getPayMethodNameByWalletId(walletId: string): string | null {
-  const wallets = getLocalWallets();
-  const wallet = wallets?.find(w => w.id === walletId);
-  if (!wallet) return null;
-
-  const methods = getLocalMethods();
-  const method = methods?.find(m => m.id === wallet.payMethodId);
-  if (!method) return null;
-
-  return method.name ?? null; // garante retorno
+// 🔢 Função auxiliar para encurtar IDs
+function shortenUUID(uuid: string, size: number): string {
+  return uuid.substring(0, size);
 }
 
-
-
+// 🧱 Esquema dos dados
 export const schema = z.object({
   id: z.string(),
   sid: z.string(),
@@ -117,13 +95,49 @@ export const schema = z.object({
   expires: z.string(),
   isReceived: z.boolean(),
   status: z.number(),
-})
+});
 
-function shortenUUID(uuid: string, size: number): string {
-    return uuid.substring(0, size);
+type Transaction = z.infer<typeof schema>
+
+type Wallet = {
+  id: string
+  name: string
+  payMethodId: string
+  balance: number
 }
 
-const columns: ColumnDef<z.infer<typeof schema>>[] = [
+type Method = {
+  id: string
+  name: string
+}
+
+// 🔒 Caches globais (fora do componente)
+let walletsCache: Wallet[] = []
+let methodsCache: Method[] = []
+
+// 💰 Função para formatação monetária
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat("pt-MZ", {
+    style: "currency",
+    currency: "MZN",
+  })
+    .format(value)
+    .replace("MZN", "MTn");
+}
+
+function handleTransactionDetails(id: string) {
+  console.log("Detalhes:", id);
+}
+
+function getPayMethodNameByWalletId(walletId: string): string {
+  const wallet = walletsCache.find(w => w.id === walletId);
+  if (!wallet) return "—";
+  const method = methodsCache.find(m => m.id === wallet.payMethodId);
+  return method?.name ?? "—";
+}
+
+// 🧩 Colunas da tabela
+const columns: ColumnDef<Transaction>[] = [
   {
     accessorKey: "id",
     header: () => <div className="text-left pl-1">Sid</div>,
@@ -134,22 +148,17 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     header: () => <div className="text-left">Montante</div>,
     cell: ({ row }) => {
       const amount = row.original.amount;
-      const isReceived = row.original.isReceived; // Acessa o valor de isReceived
-      const formatted = new Intl.NumberFormat("eng-MZ", {
-        style: "currency",
-        currency: "MZN",
-      }).format(amount).replace("MZN", "MTn");
+      const isReceived = row.original.isReceived;
 
-      // Define a classe e o símbolo com base em isReceived
       const amountClass = isReceived
-        ? "text-left font-medium w-[60px] text-green-500 dark:text-green-400"
-        : "text-left font-medium w-[60px] text-red-500 dark:text-red-400";
+        ? "text-left font-medium text-green-500 dark:text-green-400"
+        : "text-left font-medium text-red-500 dark:text-red-400";
 
       const symbol = isReceived ? "+" : "-";
 
       return (
         <div className={amountClass}>
-          {symbol}{formatted}
+          {symbol}{formatCurrency(amount)}
         </div>
       );
     },
@@ -157,24 +166,14 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
   {
     accessorKey: "tax",
     header: () => <div className="text-left">Taxa</div>,
-    cell: ({ row }) => {
-      const amount = row.original.tax;
-      const formatted = new Intl.NumberFormat("eng-MZ", {
-        style: "currency",
-        currency: "MZN",
-      }).format(Number(amount)).replace("MZN", "MTn");
-      return <div className="text-left font-medium w-[60px]">{formatted}</div>;
-    },
+    cell: ({ row }) => <div className="text-left font-medium">{formatCurrency(Number(row.original.tax))}</div>,
   },
   {
-    accessorKey: "amount2",
-    header: () => <div className="text-left">Metodo</div>,
+    accessorKey: "walletId",
+    header: () => <div className="text-left">Método</div>,
     cell: ({ row }) => (
       <div className="text-left font-medium inline">
-        <Badge
-          variant="outline"
-          className="flex gap-1 px-1.5 text-muted-foreground [&_svg]:size-3"
-        >
+        <Badge variant="outline" className="flex gap-1 px-1.5 text-muted-foreground [&_svg]:size-3">
           {getPayMethodNameByWalletId(row.original.walletId)}
         </Badge>
       </div>
@@ -183,227 +182,141 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
   {
     accessorKey: "name",
     header: () => <div className="text-left hidden md:block">Nome</div>,
-    cell: ({ row }) => (
-      <div className="text-left font-medium hidden md:block">{row.original.name}</div>
-    ),
+    cell: ({ row }) => <div className="text-left font-medium hidden md:block">{row.original.name}</div>,
   },
   {
     accessorKey: "account",
-    header: () => <div className="text-left hidden md:block">Conta</div>,
-    cell: ({ row }) => (
-      <div className="text-left font-medium hidden md:block">{row.original.account}</div>
-    ),
+    header: () => <div className="text-left hidden sm:block">Conta</div>,
+    cell: ({ row }) => <div className="text-left font-medium hidden sm:block">{row.original.account}</div>,
   },
   {
-    accessorKey: "expires",
-    header: () => <div className="text-left hidden sm:block">Data</div>,
-    cell: ({ row }) => {
-      const date = row.original.dateCreated;
-      return <div className="text-left font-medium hidden sm:block">{formatDate(date)}</div>;
-    },
-  },
-  {
-    accessorKey: "status",
-    header: () => <div className="text-left hidden">Status</div>,
-    cell: ({ row }) => (
-      <Badge
-        variant="outline"
-        className="flex text-muted-foreground [&_svg]:size-3 inline hidden"
-      >
-        {row.original.status === 0 ? (
-          <CheckCircle2Icon className="text-green-500 dark:text-green-400" />
-        ) : (
-          <LoaderIcon />
-        )}
-        {row.original.status === 0 ? "Confirmada" : "Desconhecida"}
-      </Badge>
-
-    ),
+    accessorKey: "dateCreated",
+    header: () => <div className="text-left hidden md:block">Data</div>,
+    cell: ({ row }) => <div className="text-left font-medium hidden md:block">{formatDate(row.original.dateCreated)}</div>,
   },
 ];
 
-
-function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
-  const { transform, transition, setNodeRef, isDragging } = useSortable({
-    id: row.original.id,
-  })
-
-  return (
-    <TableRow
-      data-state={row.getIsSelected() && "selected"}
-      data-dragging={isDragging}
-      ref={setNodeRef}
-      className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition: transition,
-      }}
-    >
-      {row.getVisibleCells().map((cell) => (
-        <TableCell key={cell.id}>
-          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-        </TableCell>
-      ))}
-    </TableRow>
-  )
-}
-
-export function handleTransactionDetails(id: string)
-{
-  console.log(id);
-}
-
+// 🧱 Componente principal
 export function TransactionsTable() {
-  const [data, setData] = React.useState([])
-  const [loading, setLoading] = React.useState(true);
+  const [data, setData] = React.useState<Transaction[]>([])
+  const [loading, setLoading] = React.useState(true)
+  const [searchTerm, setSearchTerm] = React.useState("")
+  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
 
   React.useEffect(() => {
     async function fetchData() {
+      const [transactions, wallets, methods] = await Promise.all([
+        getTransactions(),
+        getWallets(),
+        getMethods(),
+      ]);
 
-      const transactions = await getTransactions();
-      const _wallets = await getWallets();
-      const _methods = await getMethods();
       setData(transactions);
-      setLocalWallets(_wallets);
-      setLocalMethods(_methods);
+      walletsCache = wallets;
+      methodsCache = methods;
+      setLocalWallets(wallets);
+      setLocalMethods(methods);
       setLoading(false);
     }
 
     fetchData();
   }, []);
-  const [rowSelection, setRowSelection] = React.useState({})
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({})
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  )
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [pagination, setPagination] = React.useState({
-    pageIndex: 0,
-    pageSize: 10,
-  })
+
+  // 🔎 Filtro unificado por Sid ou Conta
+  const filteredData = React.useMemo(() => {
+    const term = searchTerm.toLowerCase().trim();
+    if (!term) return data;
+    return data.filter(
+      (item) =>
+        item.id.toLowerCase().includes(term) ||
+        item.account.toLowerCase().includes(term)
+    );
+  }, [data, searchTerm]);
 
   const dataIds = React.useMemo<UniqueIdentifier[]>(
-    () => data?.map(({ id }) => id) || [],
-    [data]
-  )
+    () => filteredData.map(({ id }) => id),
+    [filteredData]
+  );
 
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
-    state: {
-      sorting,
-      columnVisibility,
-      rowSelection,
-      columnFilters,
-      pagination,
-    },
-    getRowId: (row) => row?.id?.toString(),
-    enableRowSelection: true,
-    onRowSelectionChange: setRowSelection,
+    state: { sorting, pagination },
     onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: setPagination,
+    getRowId: (row) => row.id.toString(),
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
-  })
-
+  });
 
   return (
-
     <>
-    
-    {loading ? (
-      <div className="flex flex-col space-y-3 my-2">
-        <div className="flex justify-between">
+      {loading ? (
+        <div className="flex flex-col space-y-3">
           <Skeleton className="h-[35px] w-[370px]" />
+          <Skeleton className="h-[325px] w-full rounded-xl" />
         </div>
-
-        <Skeleton className="h-[325px] w-full rounded-xl" />
-
-      </div>
       ) : (
-      <div>
-        <div className="flex items-center py-4">
-          <Input
-            placeholder="Buscar pelo Sid"
-            value={(table.getColumn("id")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("id")?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
-        </div>
-          <div className="overflow-hidden rounded-lg border">
-
-              <Table>
-                <TableHeader className="sticky top-0 z-10 bg-muted">
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => {
-                        return (
-                          <TableHead key={header.id} colSpan={header.colSpan}>
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext()
-                                )}
-                          </TableHead>
-                        )
-                      })}
-                    </TableRow>
-                  ))}
-                </TableHeader>
-                <TableBody className="**:data-[slot=table-cell]:first:w-8">
-                  {table.getRowModel().rows?.length ? (
-                    <SortableContext
-                      items={dataIds}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      {table.getRowModel().rows.map((row) => (
-                        <DraggableRow key={row.id} row={row} />
-                      ))}
-                    </SortableContext>
-                  ) : (
-                    <TableRow>
-                      <TableCell
-                        colSpan={columns.length}
-                        className="h-24 text-center"
-                      >
-                        No results.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+        <div>
+          {/* 🔍 Campo de busca unificado */}
+          <div className="flex flex-col sm:flex-row gap-3 pb-4">
+            <Input
+              placeholder="Buscar por Sid ou Conta"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-sm"
+            />
           </div>
 
+          <div className="overflow-hidden rounded-lg border">
+            <Table>
+              <TableHeader className="sticky top-0 z-10 bg-muted">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id} colSpan={header.colSpan}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows?.length ? (
+                  <SortableContext items={dataIds} strategy={verticalListSortingStrategy}>
+                    {table.getRowModel().rows.map((row) => (
+                      <DraggableRow key={row.id} row={row} />
+                    ))}
+                  </SortableContext>
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                      Nenhuma transação encontrada.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* 📄 Paginação */}
           <div className="flex items-center justify-between py-5">
-            <div className="hidden flex-1 text-sm text-muted-foreground lg:flex">
-              {table.getFilteredSelectedRowModel().rows.length} of{" "}
-              {table.getFilteredRowModel().rows.length} row(s) selected.
-            </div>
             <div className="flex w-full items-center gap-8 lg:w-fit">
               <div className="hidden items-center gap-2 lg:flex">
                 <Label htmlFor="rows-per-page" className="text-sm font-medium">
-                  Rows per page
+                  Linhas por página
                 </Label>
                 <Select
                   value={`${table.getState().pagination.pageSize}`}
-                  onValueChange={(value) => {
-                    table.setPageSize(Number(value))
-                  }}
+                  onValueChange={(value) => table.setPageSize(Number(value))}
                 >
                   <SelectTrigger className="w-20" id="rows-per-page">
-                    <SelectValue
-                      placeholder={table.getState().pagination.pageSize}
-                    />
+                    <SelectValue placeholder={table.getState().pagination.pageSize} />
                   </SelectTrigger>
                   <SelectContent side="top">
                     {[10, 20, 30, 40, 50].map((pageSize) => (
@@ -414,152 +327,109 @@ export function TransactionsTable() {
                   </SelectContent>
                 </Select>
               </div>
+
               <div className="flex w-fit items-center justify-center text-sm font-medium">
-                Page {table.getState().pagination.pageIndex + 1} of{" "}
-                {table.getPageCount()}
+                Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount()}
               </div>
+
               <div className="ml-auto flex items-center gap-2 lg:ml-0">
-                <Button
-                  variant="outline"
-                  className="hidden h-8 w-8 p-0 lg:flex"
+                <Button variant="outline" className="hidden h-8 w-8 p-0 lg:flex"
                   onClick={() => table.setPageIndex(0)}
-                  disabled={!table.getCanPreviousPage()}
-                >
-                  <span className="sr-only">Go to first page</span>
+                  disabled={!table.getCanPreviousPage()}>
                   <ChevronsLeftIcon />
                 </Button>
-                <Button
-                  variant="outline"
-                  className="size-8"
-                  size="icon"
+                <Button variant="outline" className="size-8" size="icon"
                   onClick={() => table.previousPage()}
-                  disabled={!table.getCanPreviousPage()}
-                >
-                  <span className="sr-only">Go to previous page</span>
+                  disabled={!table.getCanPreviousPage()}>
                   <ChevronLeftIcon />
                 </Button>
-                <Button
-                  variant="outline"
-                  className="size-8"
-                  size="icon"
+                <Button variant="outline" className="size-8" size="icon"
                   onClick={() => table.nextPage()}
-                  disabled={!table.getCanNextPage()}
-                >
-                  <span className="sr-only">Go to next page</span>
+                  disabled={!table.getCanNextPage()}>
                   <ChevronRightIcon />
                 </Button>
-                <Button
-                  variant="outline"
-                  className="hidden size-8 lg:flex"
-                  size="icon"
+                <Button variant="outline" className="hidden size-8 lg:flex" size="icon"
                   onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                  disabled={!table.getCanNextPage()}
-                >
-                  <span className="sr-only">Go to last page</span>
+                  disabled={!table.getCanNextPage()}>
                   <ChevronsRightIcon />
                 </Button>
               </div>
             </div>
           </div>
-      </div>
+        </div>
       )}
     </>
-  )
+  );
 }
 
+// 🧲 Linha arrastável
+function DraggableRow({ row }: { row: Row<Transaction> }) {
+  const { transform, transition, setNodeRef, isDragging } = useSortable({ id: row.original.id });
+  return (
+    <TableRow
+      data-state={row.getIsSelected() && "selected"}
+      data-dragging={isDragging}
+      ref={setNodeRef}
+      className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+    >
+      {row.getVisibleCells().map((cell) => (
+        <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+      ))}
+    </TableRow>
+  );
+}
 
-
-function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
-
+// 📜 Detalhes da transação
+function TableCellViewer({ item }: { item: Transaction }) {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button onClick={() => handleTransactionDetails(item.id)} variant="link" className="w-fit px-0 mx-0 text-left text-foreground ">
-          {shortenUUID(item.id, 10)}
+        <Button
+          onClick={() => handleTransactionDetails(item.id)}
+          variant="link"
+          className="w-fit px-0 mx-0 text-left text-foreground"
+        >
+          {shortenUUID(item.id, 7)}
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="flex flex-col">
         <SheetHeader className="gap-1">
-          <SheetTitle>Detalhes da transacao</SheetTitle>
-          <SheetDescription>
-            Detalhes da transacao
-          </SheetDescription>
+          <SheetTitle>Detalhes da Transação</SheetTitle>
+          <SheetDescription>{item.id}</SheetDescription>
         </SheetHeader>
-        <div className="text-sm flex flex-1 flex-col gap-4 overflow-y-auto gap-1 mx-5">
-          <div className="flex justify-between">
-            <div>
-              <p className="font-bold">ID da Transacao</p> 
-            </div>
-            <div>
-              <p>{item.id}</p> 
-            </div>          
+        <div className="text-sm flex flex-1 flex-col gap-3 overflow-y-auto mx-5 mt-3">
+          <div className="grid grid-cols-2">
+            <p className="font-bold">Data</p>
+            <p className="text-muted-foreground">{formatDate(item.dateCreated)}</p>
           </div>
-          <div className="flex justify-between">
-            <div>
-              <p className="font-bold">Data da Transacao</p> 
-            </div>
-            <div>
-              <p>{formatDate(item.dateCreated)}</p> 
-            </div>
+          <div className="grid grid-cols-2">
+            <p className="font-bold">Método</p>
+            <p className="text-muted-foreground">{getPayMethodNameByWalletId(item.walletId)}</p>
           </div>
-          <div className="flex justify-between">
-            <div>
-              <p className="font-bold">Metodo</p> 
-            </div>
-            <div>
-              <p>{getPayMethodNameByWalletId(item.walletId)}</p> 
-            </div>
+          <div className="grid grid-cols-2">
+            <p className="font-bold">{item.isReceived ? "Emissor" : "Beneficiário"}</p>
+            <p className="text-muted-foreground">{item.name}</p>
           </div>
-
-          <div className="flex justify-between">
-            <div>
-              <p className="font-bold">Emissor</p> 
-            </div>
-            <div>
-              <p>{item.name}</p> 
-            </div>          
+          <div className="grid grid-cols-2">
+            <p className="font-bold">Conta</p>
+            <p className="text-muted-foreground">{item.account}</p>
           </div>
-          <div className="flex justify-between">
-            <div>
-              <p className="font-bold">Conta</p> 
-            </div>
-            <div>
-              <p>{item.account}</p>
-            </div>         
+          <div className="grid grid-cols-2">
+            <p className="font-bold">Montante</p>
+            <p className="text-muted-foreground">{formatCurrency(Number(item.amount))}</p>
           </div>
-          <div className="flex justify-between">
-            <div>
-              <p className="font-bold">Montante</p> 
-            </div>
-            <div>
-                <p>{item.isReceived ? "+ " : "- "}{new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: "MZN",
-                  }).format(Number(item.amount))}
-              </p>
-            </div>         
-          </div>
-          <div className="flex justify-between">
-            <div>
-              <p className="font-bold">Taxa</p> 
-            </div>
-            <div>
-              <p>{new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: "MZN",
-                  }).format(Number(item.tax))}
-              </p>
-            </div>         
+          <div className="grid grid-cols-2">
+            <p className="font-bold">Taxa</p>
+            <p className="text-muted-foreground">{formatCurrency(Number(item.tax))}</p>
           </div>
         </div>
-        <SheetFooter className="mt-auto flex gap-2 sm:flex-col sm:space-x-0">
+        <SheetFooter className="mt-auto">
           <SheetClose asChild>
-            <Button variant="outline" className="w-full">
-              Done
-            </Button>
+            <Button variant="outline" className="w-full">Fechar</Button>
           </SheetClose>
         </SheetFooter>
       </SheetContent>
     </Sheet>
-  )
+  );
 }

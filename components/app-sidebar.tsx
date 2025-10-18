@@ -53,7 +53,7 @@ const data = {
       icon: IconCreditCard,
     },
     {
-      title: "Transferencias",
+      title: "Transações",
       url: "/transactions",
       icon: IconListDetails,
     },
