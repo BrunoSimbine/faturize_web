@@ -199,7 +199,7 @@ const columns: ColumnDef<Transaction>[] = [
   },
 ];
 
-// 🧱 Componente principal
+// 🧱 Componente principal 
 export function TransactionsTable() {
   const [data, setData] = React.useState<Transaction[]>([])
   const [loading, setLoading] = React.useState(true)

@@ -22,17 +22,6 @@ export function SiteHeader() {
     dateUpdated: string;
   };
 
-  type Signature = {
-    dateCreated: string;
-    dateUpdated: string;
-    id: string;
-    packageId: string;
-    companyId: string;
-    orderId: string;
-    isActive: boolean;
-    expires: string;
-  };
-
   type Package = {
     id: string;
     name: string;
@@ -54,16 +43,6 @@ export function SiteHeader() {
     dateUpdated: " ",
   });
 
-  const [signature, setSignature] = useState<Signature>({
-    dateCreated: "",
-    dateUpdated: "",
-    id: "",
-    packageId: "",
-    companyId: "",
-    orderId: "",
-    isActive: false,
-    expires: "",
-  });
 
   const [systemPackage, setSystemPackage] = useState<Package>({
     id: "",
@@ -84,8 +63,6 @@ export function SiteHeader() {
         const mySignature = await getSignature();
 
         setCompany(myCompany);
-        setSignature(mySignature);
-        console.log(signature);
 
         // Busca o pacote inicial
         if (mySignature.packageId) {
@@ -93,15 +70,6 @@ export function SiteHeader() {
           setSystemPackage(myPackage);
         }
 
-        // Atualiza o pacote a cada 2 segundos
-        const intervalId = setTimeout(async () => {
-          if (mySignature.packageId) {
-            const myPackage = await getPackage(mySignature.packageId);
-            setSystemPackage(myPackage);
-          }
-        }, 2000);
-
-        return () => clearInterval(intervalId);
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
       }

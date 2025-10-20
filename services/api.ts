@@ -106,6 +106,22 @@ export async function createSignature(data: {packageId: string, account: string,
   }
 }
 
+export async function activateWallet(walletId: string) {
+  const token = getToken() as Auth;
+
+  if(token)
+  {
+    const response = await api.put(`/Wallet/activate/${walletId}`, {}, {
+      headers: {
+        Authorization: `Bearer ${token.token}`,
+      },
+    });
+    return response.data;
+  }else {
+    return {}
+  }
+}
+
 export async function refreshToken(companyId: string) {
   const token = getToken() as Auth;
 

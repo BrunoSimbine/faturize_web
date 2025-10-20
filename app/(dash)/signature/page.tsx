@@ -3,19 +3,20 @@
 import * as React from "react"
 import {
   ColumnDef,
-  ColumnFiltersState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  SortingState,
   useReactTable,
+  SortingState,
+  ColumnFiltersState,
   VisibilityState,
 } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
-import { getSignatures, getPackages } from "@/services/api"
+
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { SignatureForm } from "@/components/signature-form"
 import {
   DropdownMenu,
@@ -33,19 +34,34 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-// Formata datas de forma simples
-function formatDate(inputDate: string): string {
-  const date = new Date(inputDate)
-  const options: Intl.DateTimeFormatOptions = {
+import { getSignatures, getPackages } from "@/services/api"
+
+// ========================
+// Utils
+// ========================
+const formatDate = (input: string) => {
+  if (!input) return "-"
+  const date = new Date(input)
+  return new Intl.DateTimeFormat("pt-MZ", {
     day: "2-digit",
     month: "short",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  }
-  return new Intl.DateTimeFormat("pt-MZ", options).format(date)
+  }).format(date)
 }
 
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat("pt-MZ", {
+    style: "currency",
+    currency: "MZN",
+  })
+    .format(value)
+    .replace("MTn", "MT")
+
+// ========================
+// Types
+// ========================
 export type Package = {
   id: string
   name: string
@@ -69,48 +85,62 @@ export type Signature = {
   dateUpdated: string
 }
 
-// Hook para carregar dados
+// ========================
+// Hook para dados
+// ========================
 function useSignaturesData() {
   const [signatures, setSignatures] = React.useState<Signature[]>([])
-  const [packagesMap, setPackagesMap] = React.useState<Record<string, Package>>({})
+  const [packages, setPackages] = React.useState<Record<string, Package>>({})
+  const [loading, setLoading] = React.useState(true)
 
   React.useEffect(() => {
-    async function fetchData() {
-      const [signaturesData, packagesList] = await Promise.all([
-        getSignatures(),
-        getPackages(),
-      ])
+    ;(async () => {
+      try {
+        const [signaturesData, packagesList] = await Promise.all([
+          getSignatures(),
+          getPackages(),
+        ])
 
-      const map: Record<string, Package> = {}
-      packagesList.forEach((p: Package) => (map[p.id] = p))
+        const pkgMap = Object.fromEntries(
+          packagesList.map((p: Package) => [p.id, p])
+        )
 
-      setSignatures(signaturesData)
-      setPackagesMap(map)
-    }
-
-    fetchData()
+        setSignatures(signaturesData)
+        setPackages(pkgMap)
+      } finally {
+        setLoading(false)
+      }
+    })()
   }, [])
 
-  return { signatures, packagesMap }
+  return { signatures, packages, loading }
 }
 
-export default function DataTableDemo() {
-  const { signatures, packagesMap } = useSignaturesData()
+// ========================
+// Tabela principal
+// ========================
+export default function SignaturesTable() {
+  const { signatures, packages, loading } = useSignaturesData()
 
   const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  )
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
 
-  // Acessa pacote de forma segura
-  const getPackage = (pkgId: string) => packagesMap[pkgId]
+  const getPackage = React.useCallback(
+    (pkgId: string) => packages[pkgId],
+    [packages]
+  )
 
   const columns = React.useMemo<ColumnDef<Signature>[]>(
     () => [
       {
         accessorKey: "packageId",
         header: "Pacote",
-        cell: ({ row }) => getPackage(row.getValue("packageId") as string)?.name || "...",
+        cell: ({ row }) => getPackage(row.getValue("packageId"))?.name ?? "—",
       },
       {
         accessorKey: "dateCreated",
@@ -125,28 +155,40 @@ export default function DataTableDemo() {
       {
         id: "users",
         header: "Usuários",
-        cell: ({ row }) => getPackage(row.getValue("packageId") as string)?.users ?? "...",
+        cell: ({ row }) => getPackage(row.getValue("packageId"))?.users ?? "—",
       },
       {
         id: "devices",
         header: "Dispositivos",
-        cell: ({ row }) => getPackage(row.getValue("packageId") as string)?.devices ?? "...",
+        cell: ({ row }) =>
+          getPackage(row.getValue("packageId"))?.devices ?? "—",
       },
       {
         id: "amount",
         header: "Valor",
         cell: ({ row }) => {
-          const amount = getPackage(row.getValue("packageId") as string)?.monthlyPrice ?? 0
-          return new Intl.NumberFormat("pt-MZ", { style: "currency", currency: "MZN" }).format(amount).replace("MTn", "MT")
+          const pkg = getPackage(row.getValue("packageId"))
+          return pkg ? formatCurrency(pkg.monthlyPrice) : "—"
         },
       },
       {
         id: "status",
         header: "Status",
-        cell: ({ row }) => (row.original.isActive ? "Ativo" : "Inativo"),
+        cell: ({ row }) => (
+          <span
+            className={`${
+              row.original.isActive
+                ? "text-green-600 font-medium"
+                : "text-red-500"
+            }`}
+          >
+            {row.original.isActive ? "Ativo" : "Inativo"}
+          </span>
+        ),
       },
       {
         id: "actions",
+        header: "",
         enableHiding: false,
         cell: () => (
           <DropdownMenu>
@@ -164,7 +206,7 @@ export default function DataTableDemo() {
         ),
       },
     ],
-    [packagesMap]
+    [getPackage]
   )
 
   const table = useReactTable({
@@ -181,6 +223,9 @@ export default function DataTableDemo() {
     getFilteredRowModel: getFilteredRowModel(),
   })
 
+  // ========================
+  // Render
+  // ========================
   return (
     <div className="mx-5 flex flex-col gap-2 py-4">
       <div className="flex items-center justify-between">
@@ -188,53 +233,87 @@ export default function DataTableDemo() {
         <SignatureForm />
       </div>
 
-      <div className="overflow-hidden rounded-md border">
-        <Table>
-          <TableHeader className="sticky top-0 z-10 bg-muted">
-            {table.getHeaderGroups().map(headerGroup => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map(header => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
+      {loading ? (
+        <Skeleton className="h-[250px] w-full rounded-xl" />
+      ) : (
+        <>
+          <div className="overflow-hidden rounded-md border">
+            <Table>
+              <TableHeader className="sticky top-0 z-10 bg-muted">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    ))}
+                  </TableRow>
                 ))}
-              </TableRow>
-            ))}
-          </TableHeader>
+              </TableHeader>
 
-          <TableBody>
-            {table.getRowModel().rows.length > 0 ? (
-              table.getRowModel().rows.map(row => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
-                  {row.getVisibleCells().map(cell => (
-                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  Nenhum resultado.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              <TableBody>
+                {table.getRowModel().rows.length > 0 ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center text-muted-foreground"
+                    >
+                      Nenhum resultado encontrado.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
 
-      <div className="flex items-center justify-between py-4">
-        <div className="text-muted-foreground text-sm">
-          {table.getFilteredSelectedRowModel().rows.length} de {table.getFilteredRowModel().rows.length} selecionadas
-        </div>
-        <div className="space-x-2">
-          <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
-            Anterior
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-            Próxima
-          </Button>
-        </div>
-      </div>
+          <div className="flex items-center justify-between py-3">
+            <span className="text-sm text-muted-foreground">
+              {table.getFilteredSelectedRowModel().rows.length} de{" "}
+              {table.getFilteredRowModel().rows.length} selecionadas
+            </span>
+
+            <div className="space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+              >
+                Anterior
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+              >
+                Próxima
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
