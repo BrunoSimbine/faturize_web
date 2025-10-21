@@ -1,7 +1,6 @@
 // services/api.ts
 import axios from 'axios';
-import { setToken } from '@/services/auth';
-import { getToken, clearToken } from '@/services/auth';
+import { setToken, clearToken, getToken } from '@/services/auth';
 
 const api = axios.create({
   baseURL: 'https:/api.faturizze.com/v1',
@@ -10,533 +9,233 @@ const api = axios.create({
   },
 });
 
-// Exemplo de função que retorna um JSON
-export async function createLogin(data: {email: string, password: string}) {
-  const response = await api.post(`/Auth/login`, data);
+// Função para configurar o cabeçalho de autorização com token
+const getAuthHeaders = () => {
+  const token = getToken() as Auth;
+  return token ? { Authorization: `Bearer ${token.token}` } : {};
+};
 
-    if (response.data.token) {
-      setToken(response.data);
-    }
-
+// Função para tratar respostas de API e atualização de token
+const handleResponse = async (response: any, setTokenIfExists: boolean = true) => {
+  if (response.data.token && setTokenIfExists) {
+    setToken(response.data);
+  }
   return response.data;
+};
+
+// Função para fazer requisições POST com token
+const postWithAuth = async (url: string, data: any) => {
+  const headers = getAuthHeaders();
+  if (headers.Authorization) {
+    const response = await api.post(url, data, { headers });
+    return handleResponse(response);
+  }
+  return {};
+};
+
+// Função para fazer requisições GET com token
+const getWithAuth = async (url: string) => {
+  const headers = getAuthHeaders();
+  if (headers.Authorization) {
+    const response = await api.get(url, { headers });
+    return response.data;
+  }
+  return {};
+};
+
+// Função para fazer requisições DELETE com token
+const deleteWithAuth = async (url: string) => {
+  const headers = getAuthHeaders();
+  if (headers.Authorization) {
+    const response = await api.delete(url, { headers });
+    return response.data;
+  }
+  return {};
+};
+
+// Função para fazer requisições PUT com token
+const putWithAuth = async (url: string, data: any) => {
+  const headers = getAuthHeaders();
+  if (headers.Authorization) {
+    const response = await api.put(url, data, { headers });
+    return response.data;
+  }
+  return {};
+};
+
+// Função de login
+export async function createLogin(data: { email: string; password: string }) {
+  const response = await api.post(`/Auth/login`, data);
+  return handleResponse(response);
 }
 
+// Logout
 export async function logout() {
   const token = getToken() as Auth;
-
-  if(token)
-  {
-      const response = await api.delete('/Auth/logout', {
-      headers: {
-        Authorization: `Bearer ${token.token}`,
-      },
+  if (token) {
+    const response = await api.delete('/Auth/logout', {
+      headers: { Authorization: `Bearer ${token.token}` },
     });
-
     if (response.data.token) {
       clearToken();
     }
-
     return response.data;
-  } else {
-    return {};
   }
-
+  return {};
 }
 
-// Exemplo de função que retorna um JSON
-export async function createUser(data: {name: string, surname: string, email: string, password: string}) {
-  const response = await api.post(`/User/register`, data);
-
-    if (response.data.token) {
-      setToken(response.data);
-    }
-
-  return response.data;
+// Registrar novo usuário
+export async function createUser(data: { name: string; surname: string; email: string; password: string }) {
+  return postWithAuth('/User/register', data);
 }
 
-export type Auth = {
-  token: string
-} 
-
-export async function createCompany(data: {name: string, description: string, imageUrl: string}) {
-  const token = getToken() as Auth;
-
-  if(token)
-  {
-      const response = await api.post('/Company/add', data, {
-      headers: {
-        Authorization: `Bearer ${token.token}`,
-      },
-    });
-    return response.data;
-  } else {
-    return {};
-  }
+// Criar empresa
+export async function createCompany(data: { name: string; description: string; imageUrl: string }) {
+  return postWithAuth('/Company/add', data);
 }
 
-export async function createWallet(data: {clientId: string, publicKey: string, label: string, payMethodId: string, account: string}) {
-  const token = getToken() as Auth;
-
-  if(token)
-  {
-      const response = await api.post('/Wallet/add', data, {
-      headers: {
-        Authorization: `Bearer ${token.token}`,
-      },
-    });
-    return response.data;
-  } else {
-    return {};
-  }
+// Criar carteira
+export async function createWallet(data: { clientId: string; publicKey: string; label: string; payMethodId: string; account: string }) {
+  return postWithAuth('/Wallet/add', data);
 }
 
-export async function createSignature(data: {packageId: string, account: string, isYearly: boolean}) {
-  const token = getToken() as Auth;
-
-  if(token)
-  {
-      const response = await api.post('/Signature/add', data, {
-      headers: {
-        Authorization: `Bearer ${token.token}`,
-      },
-    });
-    return response.data;
-  } else {
-    return {};
-  }
+// Criar assinatura
+export async function createSignature(data: { packageId: string; account: string; isYearly: boolean }) {
+  return postWithAuth('/Signature/add', data);
 }
 
+// Ativar carteira
 export async function activateWallet(walletId: string) {
-  const token = getToken() as Auth;
-
-  if(token)
-  {
-    const response = await api.put(`/Wallet/activate/${walletId}`, {}, {
-      headers: {
-        Authorization: `Bearer ${token.token}`,
-      },
-    });
-    return response.data;
-  }else {
-    return {}
-  }
+  return putWithAuth(`/Wallet/activate/${walletId}`, {});
 }
 
+// Refresh token
 export async function refreshToken(companyId: string) {
-  const token = getToken() as Auth;
-
-  if(token)
-  {
-    const response = await api.put(`/Auth/refresh/${companyId}`, {}, {
-      headers: {
-        Authorization: `Bearer ${token.token}`,
-      },
-    });
-
-    if (response.data.token) {
-      setToken(response.data);
-    }
-
-    return response.data;
-  }else {
-    return {}
-  }
+  const response = await putWithAuth(`/Auth/refresh/${companyId}`, {});
+  return handleResponse(response, false);
 }
 
+// Obter empresas
 export async function getCompanies() {
-    const token = getToken() as Auth;
-
-    if(token)
-    {
-      const response = await api.get('/Company/get/all', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    }else{
-      return {}
-    }
+  return getWithAuth('/Company/get/all');
 }
 
+// Obter pacotes
 export async function getPackages() {
-    const token = getToken() as Auth;
-
-    if(token)
-    {
-      const response = await api.get(`/Package/get/all`, {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    }else{
-      return {}
-    }
+  return getWithAuth('/Package/get/all');
 }
 
+// Obter chaves de API
 export async function getApiKeys() {
-    const token = getToken() as Auth;
-
-    if(token)
-    {
-      const response = await api.get('/ApiKey/get/all', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    }else{
-      return {}
-    }
+  return getWithAuth('/ApiKey/get/all');
 }
 
+// Obter detalhes da empresa
 export async function getCompany() {
-    const token = getToken() as Auth;
-
-    if(token)
-    {
-      const response = await api.get('/Company/get', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    }else{
-      return {}
-    }
+  return getWithAuth('/Company/get');
 }
 
+// Obter assinatura atual
 export async function getSignature() {
-    const token = getToken() as Auth;
-
-    if(token)
-    {
-      const response = await api.get('/Signature/current', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    }else{
-      return {}
-    }
+  return getWithAuth('/Signature/current');
 }
 
+// Obter todas as assinaturas
 export async function getSignatures() {
-    const token = getToken() as Auth;
-
-    if(token)
-    {
-      const response = await api.get('/Signature/my', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    }else{
-      return {}
-    }
+  return getWithAuth('/Signature/my');
 }
 
+// Obter pacote específico
 export async function getPackage(packageId: string) {
-    const token = getToken() as Auth;
-
-    if(token)
-    {
-      const response = await api.get('/Package/get/' + packageId, {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    }else{
-      return {}
-    }
+  return getWithAuth(`/Package/get/${packageId}`);
 }
 
-
+// Obter todas as carteiras
 export async function getWallets() {
-    const token = getToken() as Auth;
-
-    if(token)
-    {
-      const response = await api.get('/Wallet/get', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    }else{
-      return {}
-    }
+  return getWithAuth('/Wallet/get');
 }
 
+// Deletar carteira
 export async function deleteWallet(walletId: string) {
-    const token = getToken() as Auth;
-
-    if(token)
-    {
-      const response = await api.delete('/Wallet/delete/' + walletId, {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    }else{
-      return {}
-    }
+  return deleteWithAuth(`/Wallet/delete/${walletId}`);
 }
 
+// Obter detalhes da empresa
 export async function getCompanyDetails() {
-    const token = getToken() as Auth;
-
-    if(token)
-    {
-      const response = await api.get('/Company/get/details', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-    } else {
-      return {}
-    }
-
+  return getWithAuth('/Company/get/details');
 }
 
+// Obter pedidos
 export async function getOrders() {
-    const token = getToken() as Auth;
-    if(token)
-    {
-      const response = await api.get('/Order/get', {
-          headers: {
-            Authorization: `Bearer ${token.token}`,
-          },
-        });
-      return response.data;
-    } else {
-      return {}
-    }
+  return getWithAuth('/Order/get');
 }
 
+// Obter usuário
 export async function getUser() {
-    const token = getToken() as Auth;
-    if(token)
-    {
-      const response = await api.get('/User/get', {
-          headers: {
-            Authorization: `Bearer ${token.token}`,
-          },
-        });
-      return response.data;
-    } else {
-      return {}
-    }
+  return getWithAuth('/User/get');
 }
 
+// Obter todos os pedidos
 export async function getAllOrders() {
-    const token = getToken() as Auth;
-    console.log(token)
-    if(token)
-    {
-      const response = await api.get('/Order/get/all', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-    } else {
-      return [{}]
-    }
-
+  return getWithAuth('/Order/get/all');
 }
 
+// Obter faturas
 export async function getInvoicing() {
-    const token = getToken() as Auth;
-    if(token)
-    {
-      const response = await api.get('/Company/get/invoicing', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    } else {
-      return {}
-    }
+  return getWithAuth('/Company/get/invoicing');
 }
 
+// Obter métodos de pagamento
 export async function getMethods() {
-    const token = getToken() as Auth;
-    if(token)
-    {
-      const response = await api.get('/PayMethod/get', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    } else {
-      return {}
-    }
+  return getWithAuth('/PayMethod/get');
 }
 
+// Obter todos os métodos de pagamento
 export async function getAllMethods() {
-    const token = getToken() as Auth;
-    if(token)
-    {
-      const response = await api.get('/PayMethod/get/all', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    } else {
-      return {}
-    }
+  return getWithAuth('/PayMethod/get/all');
 }
 
+// Obter resumo diário
 export async function getDailySummary() {
-    const token = getToken() as Auth;
-    if(token)
-    {
-      const response = await api.get('/DailySummary/get', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    } else {
-      return {}
-    }
+  return getWithAuth('/DailySummary/get');
 }
 
+// Obter transações
 export async function getTransactions() {
-    const token = getToken() as Auth;
-    if(token)
-    {
-      const response = await api.get('/transaction/get', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    } else {
-      return {}
-    }
+  return getWithAuth('/transaction/get');
 }
 
+// Criar pedido
 export async function createOrder(data: {
   amount: number;
   description?: string;
   client?: string;
   expires?: string;
 }) {
-  const token = getToken() as Auth;
-
-  if (token) {
-    // Cria um novo objeto apenas com as propriedades definidas
-    const requestBody: any = {
-      amount: data.amount,
-      ...(data.description && { description: data.description }),
-      ...(data.client && { client: data.client }),
-      ...(data.expires && { expires: data.expires }),
-    };
-
-    const response = await api.post('/Order/add', requestBody, {
-      headers: {
-        Authorization: `Bearer ${token.token}`,
-      },
-    });
-
-    return response.data;
-  } else {
-    return {};
-  }
+  const requestBody: any = { amount: data.amount, ...(data.description && { description: data.description }), ...(data.client && { client: data.client }), ...(data.expires && { expires: data.expires }) };
+  return postWithAuth('/Order/add', requestBody);
 }
 
-
-
+// Cancelar pedido
 export async function cancelOrder(orderId: string) {
-    const token = getToken() as Auth;
-    if(token)
-    {
-      const order = await api.put(`/Order/cancel/${orderId}`, {} ,{
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-
-      return order.data;
-
-    } else {
-      return {}
-    }
+  return putWithAuth(`/Order/cancel/${orderId}`, {});
 }
 
+// Obter pedido por ID
 export async function getOrderById(orderId: string) {
-    const token = getToken() as Auth;
-    if(token)
-    {
-      const order = await api.get(`/Order/get/${orderId}` ,{
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-
-      return order.data;
-
-    } else {
-      return {}
-    }
+  return getWithAuth(`/Order/get/${orderId}`);
 }
 
-
+// Confirmar manualmente pedido
 export async function manualConfirmOrder(orderId: string) {
-    const token = getToken() as Auth;
-    if(token)
-    {
-      const order = await api.put(`/Order/manual-confirm/${orderId}`, {} ,{
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-
-      return order.data;
-
-    } else {
-      return {}
-    }
+  return putWithAuth(`/Order/manual-confirm/${orderId}`, {});
 }
 
-export async function extendOrder(data: {orderId: string, expires: string}) {
-    const token = getToken() as Auth;
-    if(token)
-    {
-      const order = await api.put(`/Order/extend`, data ,{
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-
-      return order.data;
-
-    } else {
-      return {}
-    }
+// Estender prazo de pedido
+export async function extendOrder(data: { orderId: string; expires: string }) {
+  return putWithAuth(`/Order/extend`, data);
 }
+
+export type Auth = {
+  token: string;
+};
