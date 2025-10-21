@@ -112,7 +112,7 @@ export async function activateWallet(walletId: string) {
 // Refresh token
 export async function refreshToken(companyId: string) {
   const response = await putWithAuth(`/Auth/refresh/${companyId}`, {});
-  return handleResponse(response, false);
+  return handleResponse(response, true);
 }
 
 // Obter empresas
