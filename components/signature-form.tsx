@@ -1,23 +1,12 @@
 "use client"
 import { useState, useEffect } from "react"
-import { getPackages, createSignature } from '@/services/api';
+import { getPackages, createSignature } from '@/services/api'
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { IconPlus } from "@tabler/icons-react"
 import { Label } from "@/components/ui/label"
-
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-
 import { Input } from "@/components/ui/input"
-
 import {
   Dialog,
   DialogContent,
@@ -27,6 +16,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 export function SignatureForm() {
   type Package = {
@@ -39,28 +37,47 @@ export function SignatureForm() {
     users: number;
     dateCreated: string;
     dateUpdated: string;
-  };
+  }
 
-  const [packages, setPackages] = useState<Package[]>([]);
-  const [selectedPackage, setSelectedPackage] = useState<string>("");
-  const [phone, setPhone] = useState("");
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [packages, setPackages] = useState<Package[]>([])
+  const [selectedPackage, setSelectedPackage] = useState<string>("")
+  const [phone, setPhone] = useState("")
+  const [error, setError] = useState<string>("")
+  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     async function fetchData() {
-      const myPackages = await getPackages();
-      setPackages(myPackages);
+      const myPackages = await getPackages()
+      setPackages(myPackages)
     }
-    fetchData();
-  }, []);
+    fetchData()
+  }, [])
 
-  const handleClick = async () => { 
-    setLoading(true);
-    await createSignature({packageId: selectedPackage, account: "+258"+phone, isYearly: false});
-    setLoading(false);
-    window.location.reload();
+  // Validação de número moçambicano
+  const validatePhone = (value: string): boolean => {
+    const regex = /^(84|85|86|87)\d{7}$/ // começa com 84,85,86,87 + 7 dígitos = 9 total
+    return regex.test(value)
+  }
 
+  const handleClick = async () => {
+    if (!validatePhone(phone)) {
+      toast("Falha ao gerar fatura", {
+        description: "Insira um numero M-Pesa ou eMola valido!",
+      });
+      return
+    }
+
+    setError("")
+    setLoading(true)
+    await createSignature({ packageId: selectedPackage, account: "+258" + phone, isYearly: false })
+    setLoading(false)
+    window.location.reload()
+  }
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, "") // remove qualquer caractere não numérico
+    if (value.length <= 9) setPhone(value)
   }
 
   return (
@@ -75,7 +92,7 @@ export function SignatureForm() {
             Renovar Assinatura.
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="grid gap-3">
           <Label htmlFor="package">Pacote</Label>
           <Select value={selectedPackage} onValueChange={setSelectedPackage}>
@@ -93,7 +110,7 @@ export function SignatureForm() {
               </SelectGroup>
             </SelectContent>
           </Select>
-        </div> 
+        </div>
 
         <div className="grid gap-3">
           <Label htmlFor="phone">Contacto (Para Pagamento)</Label>
@@ -104,17 +121,18 @@ export function SignatureForm() {
             <Input
               id="phone"
               type="tel"
-              className="w-full pl-14 h-10 outline-none border border-input rounded-md text-sm shadow-sm focus:ring-1 focus:ring-ring"
+              className={`w-full pl-14 h-10 outline-none border rounded-md text-sm shadow-sm focus:ring-1 ${error ? "border-red-500" : "border-input"}`}
               placeholder="84xxxxxxx"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={handlePhoneChange}
             />
           </div>
+          {error && <span className="text-red-500 text-xs mt-1">{error}</span>}
         </div>
 
         <DialogFooter>
           <Button onClick={handleClick} type="button" disabled={loading}>
-            {loading ? "Salvando..." : "Salvar"}
+            {loading ? "Enviando Fatura..." : "Assinar"}
           </Button>
         </DialogFooter>
       </DialogContent>

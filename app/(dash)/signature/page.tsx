@@ -46,8 +46,6 @@ const formatDate = (input: string) => {
     day: "2-digit",
     month: "short",
     year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
   }).format(date)
 }
 
@@ -143,25 +141,32 @@ export default function SignaturesTable() {
         cell: ({ row }) => getPackage(row.getValue("packageId"))?.name ?? "—",
       },
       {
-        accessorKey: "dateCreated",
-        header: "Início",
-        cell: ({ row }) => formatDate(row.getValue("dateCreated")),
-      },
-      {
         accessorKey: "expires",
         header: "Expira",
-        cell: ({ row }) => formatDate(row.getValue("expires")),
+        cell: ({ row }) => {
+          const expires: string = row.getValue("expires");
+          return <span>{expires ? formatDate(expires) : "-"}</span>;
+        },
       },
       {
         id: "users",
-        header: "Usuários",
-        cell: ({ row }) => getPackage(row.getValue("packageId"))?.users ?? "—",
+        header: () => <div className="text-left hidden md:block">Usuários</div>,
+          cell: ({ row }) =>(
+          <span
+            className="hidden md:block">
+            {getPackage(row.getValue("packageId"))?.users ?? "—"}
+          </span>
+        ),
       },
       {
         id: "devices",
-        header: "Dispositivos",
-        cell: ({ row }) =>
-          getPackage(row.getValue("packageId"))?.devices ?? "—",
+        header: () => <div className="text-left hidden md:block">Dispositivos</div>,
+        cell: ({ row }) =>(
+          <span
+            className="hidden md:block">
+            {getPackage(row.getValue("packageId"))?.devices ?? "—"}
+          </span>
+        ),
       },
       {
         id: "amount",
@@ -174,17 +179,30 @@ export default function SignaturesTable() {
       {
         id: "status",
         header: "Status",
-        cell: ({ row }) => (
-          <span
-            className={`${
-              row.original.isActive
-                ? "text-green-600 font-medium"
-                : "text-red-500"
-            }`}
-          >
-            {row.original.isActive ? "Ativo" : "Inativo"}
-          </span>
-        ),
+        cell: ({ row }) => {
+          const expires = row.getValue("expires");
+          const isActive = row.original.isActive;
+          
+          // Se expires estiver vazio, exibe 'Pagamento Pendentes'
+          if (!expires) {
+            return (
+              <span className="text-yellow-500 font-medium">
+                Por Pagar
+              </span>
+            );
+          }
+
+          // Se expires não estiver vazio, exibe 'Ativo' ou 'Inativo' com base no status
+          return (
+            <span
+              className={`${
+                isActive ? "text-green-600 font-medium" : "text-red-500"
+              }`}
+            >
+              {isActive ? "Ativo" : "Inativo"}
+            </span>
+          );
+        },
       },
       {
         id: "actions",
