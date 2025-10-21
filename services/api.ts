@@ -3,7 +3,7 @@ import axios from 'axios';
 import { setToken, clearToken, getToken } from '@/services/auth';
 
 const api = axios.create({
-  baseURL: 'https:/api.faturizze.com/v1',
+  baseURL: 'https://api.faturizze.com/v1',
   headers: {
     'Content-Type': 'application/json',
   },
