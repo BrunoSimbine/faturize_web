@@ -56,23 +56,37 @@ export function SignatureForm() {
 
   // Validação de número moçambicano
   const validatePhone = (value: string): boolean => {
-    const regex = /^(84|85|86|87)\d{7}$/ // começa com 84,85,86,87 + 7 dígitos = 9 total
+    const regex = /^(82|83|84|85|86|87)\d{7}$/ // começa com 84,85,86,87 + 7 dígitos = 9 total
     return regex.test(value)
   }
 
   const handleClick = async () => {
     if (!validatePhone(phone)) {
       toast("Falha ao gerar fatura", {
-        description: "Insira um numero M-Pesa ou eMola valido!",
+        description: "Insira um numero valido!",
       });
       return
     }
 
     setError("")
     setLoading(true)
-    await createSignature({ packageId: selectedPackage, account: "+258" + phone, isYearly: false })
-    setLoading(false)
-    window.location.reload()
+    try {
+      await createSignature({ packageId: selectedPackage, account: "+258" + phone, isYearly: false })
+      window.location.reload()
+    }catch (err: unknown) {
+      if (err && typeof err === "object" && "response" in err) {
+        const error = err as { response: { data: { type?: string; solution?: string } } };
+        toast(error.response.data.type || "Falha ao criar fatura", {
+          description: error.response.data.solution || "Não foi possível criar uma fatura",
+        });
+      } else {
+        toast("Erro inesperado", {
+          description: "Algo correu mal. Tente novamente.",
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,7 +118,7 @@ export function SignatureForm() {
                 <SelectLabel>Pacotes Disponíveis</SelectLabel>
                 {packages.map(pkg => (
                   <SelectItem key={pkg.id} value={pkg.id}>
-                    {pkg.name} - {pkg.monthlyPrice} MTn/mês
+                    {pkg.name} - {pkg.monthlyPrice} MT/mês
                   </SelectItem>
                 ))}
               </SelectGroup>

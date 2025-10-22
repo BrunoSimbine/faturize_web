@@ -125,7 +125,7 @@ function formatCurrency(value: number): string {
     currency: "MZN",
   })
     .format(value)
-    .replace("MTn", "MT");
+    .replace("MTn", "MT").replace("MZN", "MT");
 }
 
 function handleTransactionDetails(id: string) {

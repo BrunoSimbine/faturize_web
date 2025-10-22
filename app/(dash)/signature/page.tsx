@@ -55,7 +55,7 @@ const formatCurrency = (value: number) =>
     currency: "MZN",
   })
     .format(value)
-    .replace("MTn", "MT")
+    .replace("MTn", "MT").replace("MZN", "MT")
 
 // ========================
 // Types

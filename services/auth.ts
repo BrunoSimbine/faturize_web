@@ -22,7 +22,7 @@ type PaymentMethod = {
 export function setToken(data: { token: string; active: boolean }) {
   if (typeof document !== 'undefined') {
     const expires = new Date();
-    expires.setTime(expires.getTime() + 60 * 60 * 1000 * 6); // 30 min em ms
+    expires.setTime(expires.getTime() + 60 * 60 * 1000 * 6 * 60); // 30 min em ms
     document.cookie = `${TOKEN_DATA}=${encodeURIComponent(
       JSON.stringify(data)
     )}; expires=${expires.toUTCString()}; path=/`;
@@ -32,7 +32,7 @@ export function setToken(data: { token: string; active: boolean }) {
 export function setLocalMethods(data: object) {
   if (typeof document !== 'undefined') {
     const expires = new Date();
-    expires.setTime(expires.getTime() + 60 * 60 * 1000 * 6); // 30 min em ms
+    expires.setTime(expires.getTime() + 60 * 60 * 1000 * 6 * 60); // 30 min em ms
     document.cookie = `${'methods_data'}=${encodeURIComponent(
       JSON.stringify(data)
     )}; expires=${expires.toUTCString()}; path=/`;
@@ -42,7 +42,7 @@ export function setLocalMethods(data: object) {
 export function setLocalWallets(data: object) {
   if (typeof document !== 'undefined') {
     const expires = new Date();
-    expires.setTime(expires.getTime() + 60 * 60 * 1000 * 6); // 30 min em ms
+    expires.setTime(expires.getTime() + 60 * 60 * 1000 * 6 * 60); // 30 min em ms
     document.cookie = `${'wallets_data'}=${encodeURIComponent(
       JSON.stringify(data)
     )}; expires=${expires.toUTCString()}; path=/`;
