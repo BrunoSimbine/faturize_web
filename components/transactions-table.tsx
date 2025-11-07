@@ -73,10 +73,9 @@ function formatDate(inputDate: string): string {
     month: "short",
     hour: "2-digit",
     minute: "2-digit",
-    timeZone, // ajusta automaticamente para o fuso do sistema
+    timeZone,
   }).format(new Date(inputDate));
 }
-
 
 // 🔢 Função auxiliar para encurtar IDs
 function shortenUUID(uuid: string, size: number): string {
@@ -92,6 +91,7 @@ export const schema = z.object({
   tax: z.string(),
   walletId: z.string(),
   dateCreated: z.string(),
+  date: z.string(),
   dateUpdated: z.string(),
   amount: z.number(),
   paid: z.number(),
@@ -142,7 +142,7 @@ function getPayMethodNameByWalletId(walletId: string): string {
 // 🧩 Colunas da tabela
 const columns: ColumnDef<Transaction>[] = [
   {
-    accessorKey: "id",
+    accessorKey: "sid",
     header: () => <div className="text-left pl-1">Sid</div>,
     cell: ({ row }) => <TableCellViewer item={row.original} />,
   },
@@ -152,13 +152,10 @@ const columns: ColumnDef<Transaction>[] = [
     cell: ({ row }) => {
       const amount = row.original.amount;
       const isReceived = row.original.isReceived;
-
       const amountClass = isReceived
         ? "text-left font-medium text-green-500 dark:text-green-400"
         : "text-left font-medium text-red-500 dark:text-red-400";
-
       const symbol = isReceived ? "+" : "-";
-
       return (
         <div className={amountClass}>
           {symbol}{formatCurrency(amount)}
@@ -195,7 +192,7 @@ const columns: ColumnDef<Transaction>[] = [
   {
     accessorKey: "dateCreated",
     header: () => <div className="text-left hidden md:block">Data</div>,
-    cell: ({ row }) => <div className="text-left font-medium hidden md:block">{formatDate(row.original.dateCreated)}</div>,
+    cell: ({ row }) => <div className="text-left font-medium hidden md:block">{formatDate(row.original.date)}</div>,
   },
 ];
 
@@ -232,13 +229,13 @@ export function TransactionsTable() {
     if (!term) return data;
     return data.filter(
       (item) =>
-        item.id.toLowerCase().includes(term) ||
+        item.sid.toLowerCase().includes(term) || // ✅ ALTERADO para usar sid
         item.account.toLowerCase().includes(term)
     );
   }, [data, searchTerm]);
 
   const dataIds = React.useMemo<UniqueIdentifier[]>(
-    () => filteredData.map(({ id }) => id),
+    () => filteredData.map(({ sid }) => sid), // ✅ ALTERADO para usar sid
     [filteredData]
   );
 
@@ -248,7 +245,7 @@ export function TransactionsTable() {
     state: { sorting, pagination },
     onSortingChange: setSorting,
     onPaginationChange: setPagination,
-    getRowId: (row) => row.id.toString(),
+    getRowId: (row) => row.sid.toString(), // ✅ ALTERADO para usar sid
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -367,7 +364,7 @@ export function TransactionsTable() {
 
 // 🧲 Linha arrastável
 function DraggableRow({ row }: { row: Row<Transaction> }) {
-  const { transform, transition, setNodeRef, isDragging } = useSortable({ id: row.original.id });
+  const { transform, transition, setNodeRef, isDragging } = useSortable({ id: row.original.sid }); // ✅ ALTERADO para usar sid
   return (
     <TableRow
       data-state={row.getIsSelected() && "selected"}
@@ -389,22 +386,22 @@ function TableCellViewer({ item }: { item: Transaction }) {
     <Sheet>
       <SheetTrigger asChild>
         <Button
-          onClick={() => handleTransactionDetails(item.id)}
+          onClick={() => handleTransactionDetails(item.sid)} // ✅ ALTERADO para usar sid
           variant="link"
           className="w-fit px-0 mx-0 text-left text-foreground"
         >
-          {shortenUUID(item.id, 7)}
+          {shortenUUID(item.sid, 7)}
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="flex flex-col">
         <SheetHeader className="gap-1">
           <SheetTitle>Detalhes da Transação</SheetTitle>
-          <SheetDescription>{item.id}</SheetDescription>
+          <SheetDescription>{item.sid}</SheetDescription>
         </SheetHeader>
         <div className="text-sm flex flex-1 flex-col gap-3 overflow-y-auto mx-5 mt-3">
           <div className="grid grid-cols-2">
             <p className="font-bold">Data</p>
-            <p className="text-muted-foreground">{formatDate(item.dateCreated)}</p>
+            <p className="text-muted-foreground">{formatDate(item.date)}</p>
           </div>
           <div className="grid grid-cols-2">
             <p className="font-bold">Método</p>

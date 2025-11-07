@@ -74,7 +74,7 @@ export async function createCompany(data: {name: string, description: string, im
   }
 }
 
-export async function createWallet(data: {clientId: string, publicKey: string, label: string, payMethodId: string, account: string}) {
+export async function createWallet(data: {publicKey: string, label: string, account: string}) {
   const token = getToken() as Auth;
 
   if(token)
