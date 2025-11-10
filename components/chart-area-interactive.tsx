@@ -130,8 +130,8 @@ export function WalletMonthlyCharts() {
         <Skeleton className="h-[325px] w-full rounded-xl" />
       ) : (
         <>
-          {renderChart("Total Recebido", totalReceivedData, "#10B981")}
-          {renderChart("Total Enviado", totalSentData, "#EF4444")}
+          {renderChart("Ganhos", totalReceivedData, "#10B981")}
+          {renderChart("Gastos", totalSentData, "#EF4444")}
           {renderChart("Taxas Pagas", totalFeesData, "#6366F1")}
         </>
       )}

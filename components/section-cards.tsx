@@ -9,7 +9,7 @@ export type Company = {
   received: number;
   send: number;
   tax: number;
-  balance: number;
+  service: number;
 };
 
 const formatCurrency = (value: number): string => {
@@ -25,7 +25,7 @@ export function SectionCards() {
     received: 0,
     send: 0,
     tax: 0,
-    balance: 0,
+    service: 0,
   });
 
   useEffect(() => {
@@ -45,11 +45,11 @@ export function SectionCards() {
 
   const cardContent = [
     {
-      title: "Total Recebido",
+      title: "Ganhos",
       value: company.received 
     },
     {
-      title: "Total Enviado",
+      title: "Gastos",
       value: company.send
     },
     {
@@ -57,8 +57,8 @@ export function SectionCards() {
       value: company.tax
     },
     {
-      title: "Balanço",
-      value: company.balance
+      title: "Serviços",
+      value: company.service
     }
   ];
 
