@@ -1,542 +1,240 @@
 // services/api.ts
 import axios from 'axios';
-import { setToken } from '@/services/auth';
-import { getToken, clearToken } from '@/services/auth';
+import { getToken, setToken, clearToken } from '@/services/auth';
 
+export type Auth = {
+  token: string;
+};
+
+// ------------------------------------------------------
+// 🔹 Configuração base do Axios
+// ------------------------------------------------------
 const api = axios.create({
   baseURL: 'https://api.faturizze.com/v1',
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
 });
 
-// Exemplo de função que retorna um JSON
-export async function createLogin(data: {email: string, password: string}) {
-  const response = await api.post(`/Auth/login`, data);
+// ------------------------------------------------------
+// 🔹 Interceptores globais (tratamento de erros e auth)
+// ------------------------------------------------------
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
 
-    if (response.data.token) {
-      setToken(response.data);
+    if (status === 401) {
+      clearToken();
+      window.location.href = '/login';
+    } else if (status === 403) {
+      //clearToken();
+      window.location.href = '/verify';
     }
 
-  return response.data;
+    return Promise.reject(error);
+  }
+);
+
+// ------------------------------------------------------
+// 🔹 Funções auxiliares
+// ------------------------------------------------------
+function authHeader() {
+  const token = getToken() as Auth | null;
+  return token ? { Authorization: `Bearer ${token.token}` } : {};
+}
+
+async function safeRequest<T>(fn: () => Promise<T>): Promise<T | {}> {
+  try {
+    return await fn();
+  } catch (err) {
+    console.error('API Error:', err);
+    return {};
+  }
+}
+
+// ------------------------------------------------------
+// 🔹 Auth
+// ------------------------------------------------------
+export async function createLogin(data: { email: string; password: string }) {
+  return safeRequest(async () => {
+    const res = await api.post('/Auth/login', data);
+    if (res.data.token) setToken(res.data);
+    return res.data;
+  });
 }
 
 export async function logout() {
-  const token = getToken() as Auth;
+  return safeRequest(async () => {
+    const token = getToken() as Auth;
+    if (!token) return {};
 
-  if(token)
-  {
-      const response = await api.delete('/Auth/logout', {
-      headers: {
-        Authorization: `Bearer ${token.token}`,
-      },
-    });
-
-    if (response.data.token) {
-      clearToken();
-    }
-
-    return response.data;
-  } else {
-    return {};
-  }
-
+    const res = await api.delete('/Auth/logout', { headers: authHeader() });
+    clearToken();
+    return res.data;
+  });
 }
 
-// Exemplo de função que retorna um JSON
-export async function createUser(data: {name: string, surname: string, email: string, password: string}) {
-  const response = await api.post(`/User/register`, data);
-
-    if (response.data.token) {
-      setToken(response.data);
-    }
-
-  return response.data;
+export async function createUser(data: { name: string; surname: string; email: string; password: string }) {
+  return safeRequest(async () => {
+    const res = await api.post('/User/register', data);
+    if (res.data.token) setToken(res.data);
+    return res.data;
+  });
 }
 
-export type Auth = {
-  token: string
-} 
-
-export async function createCompany(data: {name: string, description: string, imageUrl: string}) {
-  const token = getToken() as Auth;
-
-  if(token)
-  {
-      const response = await api.post('/Company/add', data, {
-      headers: {
-        Authorization: `Bearer ${token.token}`,
-      },
-    });
-    return response.data;
-  } else {
-    return {};
-  }
+// ------------------------------------------------------
+// 🔹 Recursos gerais
+// ------------------------------------------------------
+export async function createCompany(data: { name: string; description: string; imageUrl: string }) {
+  return safeRequest(async () =>
+    (await api.post('/Company/add', data, { headers: authHeader() })).data
+  );
 }
 
-export async function createWallet(data: {publicKey: string, label: string, account: string}) {
-  const token = getToken() as Auth;
-
-  if(token)
-  {
-      const response = await api.post('/Wallet/add', data, {
-      headers: {
-        Authorization: `Bearer ${token.token}`,
-      },
-    });
-    return response.data;
-  } else {
-    return {};
-  }
+export async function createWallet(data: { publicKey: string; label: string; account: string }) {
+  return safeRequest(async () =>
+    (await api.post('/Wallet/add', data, { headers: authHeader() })).data
+  );
 }
 
-export async function createSignature(data: {packageId: string, account: string, isYearly: boolean}) {
-  const token = getToken() as Auth;
+export async function createSignature(data: { packageId: string; account: string; isYearly: boolean }) {
+  return safeRequest(async () =>
+    (await api.post('/Signature/add', data, { headers: authHeader() })).data
+  );
+}
 
-  if(token)
-  {
-      const response = await api.post('/Signature/add', data, {
-      headers: {
-        Authorization: `Bearer ${token.token}`,
-      },
-    });
-    return response.data;
-  } else {
-    return {};
-  }
+export async function activateUser(otp: string) {
+  return safeRequest(async () =>
+    (await api.post(`/User/activate?Otp=${otp}`, {}, { headers: authHeader() })).data
+  );
 }
 
 export async function activateWallet(walletId: string) {
-  const token = getToken() as Auth;
-
-  if(token)
-  {
-    const response = await api.put(`/Wallet/activate/${walletId}`, {}, {
-      headers: {
-        Authorization: `Bearer ${token.token}`,
-      },
-    });
-    return response.data;
-  }else {
-    return {}
-  }
+  return safeRequest(async () =>
+    (await api.put(`/Wallet/activate/${walletId}`, {}, { headers: authHeader() })).data
+  );
 }
 
 export async function refreshToken(companyId: string) {
-  const token = getToken() as Auth;
-
-  if(token)
-  {
-    const response = await api.put(`/Auth/refresh/${companyId}`, {}, {
-      headers: {
-        Authorization: `Bearer ${token.token}`,
-      },
-    });
-
-    if (response.data.token) {
-      setToken(response.data);
-    }
-
-    return response.data;
-  }else {
-    return {}
-  }
+  return safeRequest(async () => {
+    const res = await api.put(`/Auth/refresh/${companyId}`, {}, { headers: authHeader() });
+    if (res.data.token) setToken(res.data);
+    return res.data;
+  });
 }
 
+// ------------------------------------------------------
+// 🔹 Funções GET (listagens e detalhes)
+// ------------------------------------------------------
 export async function getCompanies() {
-    const token = getToken() as Auth;
-
-    if(token)
-    {
-      const response = await api.get('/Company/get/all', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    }else{
-      return {}
-    }
-}
-
-export async function getPackages() {
-    const token = getToken() as Auth;
-
-    if(token)
-    {
-      const response = await api.get(`/Package/get/all`, {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    }else{
-      return {}
-    }
-}
-
-export async function getApiKeys() {
-    const token = getToken() as Auth;
-
-    if(token)
-    {
-      const response = await api.get('/ApiKey/get/all', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    }else{
-      return {}
-    }
+  return safeRequest(async () => (await api.get('/Company/get/all', { headers: authHeader() })).data);
 }
 
 export async function getCompany() {
-    const token = getToken() as Auth;
-
-    if(token)
-    {
-      const response = await api.get('/Company/get', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    }else{
-      return {}
-    }
-}
-
-export async function getSignature() {
-    const token = getToken() as Auth;
-
-    if(token)
-    {
-      const response = await api.get('/Signature/current', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    }else{
-      return {}
-    }
-}
-
-export async function getSignatures() {
-    const token = getToken() as Auth;
-
-    if(token)
-    {
-      const response = await api.get('/Signature/my', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    }else{
-      return {}
-    }
-}
-
-export async function getPackage(packageId: string) {
-    const token = getToken() as Auth;
-
-    if(token)
-    {
-      const response = await api.get('/Package/get/' + packageId, {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    }else{
-      return {}
-    }
-}
-
-
-export async function getWallets() {
-    const token = getToken() as Auth;
-
-    if(token)
-    {
-      const response = await api.get('/Wallet/get', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    }else{
-      return {}
-    }
-}
-
-export async function deleteWallet(walletId: string) {
-    const token = getToken() as Auth;
-
-    if(token)
-    {
-      const response = await api.delete('/Wallet/delete/' + walletId, {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    }else{
-      return {}
-    }
+  return safeRequest(async () => (await api.get('/Company/get', { headers: authHeader() })).data);
 }
 
 export async function getCompanyDetails() {
-    const token = getToken() as Auth;
+  return safeRequest(async () => (await api.get('/Company/get/details', { headers: authHeader() })).data);
+}
 
-    if(token)
-    {
-      const response = await api.get('/Company/get/details', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-    } else {
-      return {}
-    }
+export async function getPackages() {
+  return safeRequest(async () => (await api.get('/Package/get/all', { headers: authHeader() })).data);
+}
 
+export async function getPackage(packageId: string) {
+  return safeRequest(async () => (await api.get(`/Package/get/${packageId}`, { headers: authHeader() })).data);
+}
+
+export async function getWallets() {
+  return safeRequest(async () => (await api.get('/Wallet/get', { headers: authHeader() })).data);
+}
+
+export async function getApiKeys() {
+  return safeRequest(async () => (await api.get('/ApiKey/get/all', { headers: authHeader() })).data);
+}
+
+export async function getSignature() {
+  return safeRequest(async () => (await api.get('/Signature/current', { headers: authHeader() })).data);
+}
+
+export async function getSignatures() {
+  return safeRequest(async () => (await api.get('/Signature/my', { headers: authHeader() })).data);
 }
 
 export async function getOrders() {
-    const token = getToken() as Auth;
-    if(token)
-    {
-      const response = await api.get('/Order/get', {
-          headers: {
-            Authorization: `Bearer ${token.token}`,
-          },
-        });
-      return response.data;
-    } else {
-      return {}
-    }
-}
-
-export async function getUser() {
-    const token = getToken() as Auth;
-    if(token)
-    {
-      const response = await api.get('/User/get', {
-          headers: {
-            Authorization: `Bearer ${token.token}`,
-          },
-        });
-      return response.data;
-    } else {
-      return {}
-    }
+  return safeRequest(async () => (await api.get('/Order/get', { headers: authHeader() })).data);
 }
 
 export async function getAllOrders() {
-    const token = getToken() as Auth;
-    console.log(token)
-    if(token)
-    {
-      const response = await api.get('/Order/get/all', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-    } else {
-      return [{}]
-    }
+  return safeRequest(async () => (await api.get('/Order/get/all', { headers: authHeader() })).data);
+}
 
+export async function getUser() {
+  return safeRequest(async () => (await api.get('/User/get', { headers: authHeader() })).data);
 }
 
 export async function getInvoicing() {
-    const token = getToken() as Auth;
-    if(token)
-    {
-      const response = await api.get('/Company/get/invoicing', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    } else {
-      return {}
-    }
+  return safeRequest(async () => (await api.get('/Company/get/invoicing', { headers: authHeader() })).data);
 }
 
 export async function getMethods() {
-    const token = getToken() as Auth;
-    if(token)
-    {
-      const response = await api.get('/PayMethod/get', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    } else {
-      return {}
-    }
+  return safeRequest(async () => (await api.get('/PayMethod/get', { headers: authHeader() })).data);
 }
 
 export async function getAllMethods() {
-    const token = getToken() as Auth;
-    if(token)
-    {
-      const response = await api.get('/PayMethod/get/all', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    } else {
-      return {}
-    }
+  return safeRequest(async () => (await api.get('/PayMethod/get/all', { headers: authHeader() })).data);
 }
 
 export async function getDailySummary() {
-    const token = getToken() as Auth;
-    if(token)
-    {
-      const response = await api.get('/DailySummary/get', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    } else {
-      return {}
-    }
+  return safeRequest(async () => (await api.get('/DailySummary/get', { headers: authHeader() })).data);
 }
 
 export async function getTransactions() {
-    const token = getToken() as Auth;
-    if(token)
-    {
-      const response = await api.get('/transaction/get', {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-      return response.data;
-
-    } else {
-      return {}
-    }
+  return safeRequest(async () => (await api.get('/transaction/get', { headers: authHeader() })).data);
 }
 
+// ------------------------------------------------------
+// 🔹 Orders
+// ------------------------------------------------------
 export async function createOrder(data: {
   amount: number;
   description?: string;
   client?: string;
   expires?: string;
 }) {
-  const token = getToken() as Auth;
-
-  if (token) {
-    // Cria um novo objeto apenas com as propriedades definidas
-    const requestBody: any = {
+  return safeRequest(async () => {
+    const requestBody = {
       amount: data.amount,
       ...(data.description && { description: data.description }),
       ...(data.client && { client: data.client }),
       ...(data.expires && { expires: data.expires }),
     };
 
-    const response = await api.post('/Order/add', requestBody, {
-      headers: {
-        Authorization: `Bearer ${token.token}`,
-      },
-    });
-
-    return response.data;
-  } else {
-    return {};
-  }
+    const res = await api.post('/Order/add', requestBody, { headers: authHeader() });
+    return res.data;
+  });
 }
 
-
-
 export async function cancelOrder(orderId: string) {
-    const token = getToken() as Auth;
-    if(token)
-    {
-      const order = await api.put(`/Order/cancel/${orderId}`, {} ,{
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-
-      return order.data;
-
-    } else {
-      return {}
-    }
+  return safeRequest(async () =>
+    (await api.put(`/Order/cancel/${orderId}`, {}, { headers: authHeader() })).data
+  );
 }
 
 export async function getOrderById(orderId: string) {
-    const token = getToken() as Auth;
-    if(token)
-    {
-      const order = await api.get(`/Order/get/${orderId}` ,{
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-
-      return order.data;
-
-    } else {
-      return {}
-    }
+  return safeRequest(async () =>
+    (await api.get(`/Order/get/${orderId}`, { headers: authHeader() })).data
+  );
 }
-
 
 export async function manualConfirmOrder(orderId: string) {
-    const token = getToken() as Auth;
-    if(token)
-    {
-      const order = await api.put(`/Order/manual-confirm/${orderId}`, {} ,{
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-
-      return order.data;
-
-    } else {
-      return {}
-    }
+  return safeRequest(async () =>
+    (await api.put(`/Order/manual-confirm/${orderId}`, {}, { headers: authHeader() })).data
+  );
 }
 
-export async function extendOrder(data: {orderId: string, expires: string}) {
-    const token = getToken() as Auth;
-    if(token)
-    {
-      const order = await api.put(`/Order/extend`, data ,{
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      });
-
-      return order.data;
-
-    } else {
-      return {}
-    }
+export async function extendOrder(data: { orderId: string; expires: string }) {
+  return safeRequest(async () =>
+    (await api.put('/Order/extend', data, { headers: authHeader() })).data
+  );
 }

@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner"
 
-import { getWallets, deleteWallet, activateWallet } from "@/services/api";
+import { getWallets, activateWallet } from "@/services/api";
 import { SparkpagaForm } from "@/components/sparkpaga-form";
 
 // Tipagem para facilitar a leitura do código
@@ -25,7 +25,7 @@ type Wallet = {
   isActive: boolean;
 };
 
-const WalletItem = ({ wallet, onDelete, onActivate }: { wallet: Wallet; onDelete: () => void; onActivate: () => void }) => {
+const WalletItem = ({ wallet, onActivate }: { wallet: Wallet; onActivate: () => void }) => {
   return (
     <div className="flex items-center justify-between space-x-4">
       <div className="flex items-center space-x-4">
@@ -55,7 +55,6 @@ const WalletItem = ({ wallet, onDelete, onActivate }: { wallet: Wallet; onDelete
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-32">
-          <DropdownMenuItem onClick={onDelete}>Apagar</DropdownMenuItem>
           <DropdownMenuItem onClick={onActivate}>Ativar</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -79,10 +78,6 @@ export default function SharePage() {
     fetchData();
   }, []);
 
-  const handleDeleteWallet = async (walletId: string) => {
-    await deleteWallet(walletId);
-    setWallets(wallets.filter(wallet => wallet.id !== walletId));
-  };
 
   const handleActivateWallet = async (walletId: string) => {
     try
@@ -126,7 +121,7 @@ export default function SharePage() {
             </div>
             <div className="grid gap-6">
               {wallets.map(wallet => (
-                <WalletItem key={wallet.id} wallet={wallet} onDelete={() => handleDeleteWallet(wallet.id)} onActivate={() => handleActivateWallet(wallet.id)} />
+                <WalletItem key={wallet.id} wallet={wallet} onActivate={() => handleActivateWallet(wallet.id)} />
               ))}
             </div>
           </div>
